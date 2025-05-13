@@ -1,0 +1,184 @@
+
+import { ArrowDownIcon, ArrowUpIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Signal } from '@/lib/supabaseClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import useSWR from 'swr';
+
+const COINBASE_APP_ID = '886427730';
+
+const fetchFinanceRank = async () => {
+const response = await fetch('/api/coinbaseRank');
+  if (!response.ok) throw new Error('Failed to fetch');
+  const data = await response.json();
+  console.log('CoinbaseRank API response:', data);
+  // Apple API returns results in data.feed.results
+  const coinbaseApp = data.feed?.results?.find((app: any) => app.id === COINBASE_APP_ID);
+  return coinbaseApp ? data.feed.results.indexOf(coinbaseApp) + 1 : undefined;
+};
+
+interface SignalCardProps {
+  signal: Signal;
+  className?: string;
+}
+
+function FinanceRankBox({ previousFinanceRank }: { previousFinanceRank?: number }) {
+  const { data: financeRank, isLoading, error } = useSWR('coinbase-finance-rank', fetchFinanceRank, {
+    refreshInterval: 300000,
+    revalidateOnFocus: false,
+  });
+
+  let content;
+  if (isLoading) {
+    content = <span className="animate-pulse bg-gray-700 rounded w-10 h-10 block" />;
+  } else if (error || typeof financeRank !== 'number') {
+    content = 'N/A';
+  } else {
+    content = <span className="text-4xl font-bold mb-1">{financeRank}</span>;
+  }
+
+  // Show delta if previousFinanceRank is available and financeRank is a number
+  let delta = null;
+  if (typeof previousFinanceRank === 'number' && typeof financeRank === 'number') {
+    const improved = financeRank < previousFinanceRank;
+    delta = (
+      <div className={cn(
+        "text-xs mt-1 flex items-center",
+        improved ? "text-emerald-400" : "text-rose-400"
+      )}>
+        {improved ? <ArrowUpIcon className="h-3 w-3 mr-1" /> : <ArrowDownIcon className="h-3 w-3 mr-1" />}
+        {Math.abs(financeRank - previousFinanceRank)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-lg">
+      {content}
+      <span className="text-xs text-gray-400 text-center">Finance Rank</span>
+      {delta}
+    </div>
+  );
+}
+
+export function SignalCard({ signal, className }: SignalCardProps) {
+  // Format the timestamp
+  const formattedDate = new Date(signal.ts).toLocaleString();
+  
+  // Is this a Coinbase App Rank card?
+  const isCoinbaseRank = signal.name === 'Coinbase App Rank';
+  
+  // Is this a Pi-Cycle Top card?
+  const isPiCycleTop = signal.name === 'Pi-Cycle Top';
+  
+  // For Coinbase App Rank, determine if rank improved or worsened
+  const rankImproved = isCoinbaseRank && 
+    signal.previous_value !== undefined && 
+    signal.value < signal.previous_value;
+  
+  // For Pi-Cycle Top, determine if we're in a warning state
+  const isPiCycleCrossed = isPiCycleTop && signal.value === 1;
+
+  return (
+    <Card className={cn(
+      "backdrop-blur-sm bg-gray-900/70 border-gray-800/50 text-white shadow-lg",
+      "transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-emerald-900/20",
+      "rounded-[24px]",
+      className
+    )}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-white flex items-center justify-between">
+          {signal.name}
+          
+          {isCoinbaseRank && (
+            <Badge 
+              variant={rankImproved ? "default" : "outline"}
+              className={cn(
+                "ml-2",
+                rankImproved 
+                  ? "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 border-emerald-500/40" 
+                  : "bg-rose-500/20 text-rose-500 hover:bg-rose-500/30 border-rose-500/40"
+              )}
+            >
+              {rankImproved ? (
+                <ArrowUpIcon className="h-3 w-3 mr-1" />
+              ) : (
+                <ArrowDownIcon className="h-3 w-3 mr-1" />
+              )}
+              {signal.previous_value !== undefined ? Math.abs(signal.value - signal.previous_value) : 0}
+            </Badge>
+          )}
+          
+          {isPiCycleTop && (
+            <Badge 
+              variant="outline"
+              className={cn(
+                "ml-2",
+                isPiCycleCrossed
+                  ? "bg-rose-500/20 text-rose-500 hover:bg-rose-500/30 border-rose-500/40"
+                  : "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 border-emerald-500/40"
+              )}
+            >
+              {isPiCycleCrossed ? "CROSS - potential top" : "SAFE"}
+            </Badge>
+          )}
+        </CardTitle>
+        <CardDescription className="text-gray-400">
+          {signal.description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isCoinbaseRank && (
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {/* Overall Rank */}
+            <div className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-lg">
+              <span className="text-4xl font-bold mb-1">{signal.value}</span>
+              <span className="text-xs text-gray-400 text-center">Overall Rank</span>
+              {signal.previous_value !== undefined && (
+                <div className={cn(
+                  "text-xs mt-1 flex items-center",
+                  rankImproved ? "text-emerald-400" : "text-rose-400"
+                )}>
+                  {rankImproved ? (
+                    <ArrowUpIcon className="h-3 w-3 mr-1" />
+                  ) : (
+                    <ArrowDownIcon className="h-3 w-3 mr-1" />
+                  )}
+                  {Math.abs(signal.value - signal.previous_value)}
+                </div>
+              )}
+            </div>
+            
+            {/* Finance Rank */}
+            <FinanceRankBox previousFinanceRank={signal.previous_finance_rank} />
+          </div>
+        )}
+        
+        {isPiCycleTop && (
+          <div className="flex flex-col items-center justify-center py-4">
+            <div className={cn(
+              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
+              isPiCycleCrossed
+                ? "bg-rose-500/20"
+                : "bg-emerald-500/20"
+            )}>
+              <span className="text-2xl font-bold">
+                {isPiCycleCrossed ? "⚠️" : "✓"}
+              </span>
+            </div>
+            <span className="text-sm text-gray-400">
+              {isPiCycleCrossed 
+                ? "Market cycle warning active" 
+                : "No market cycle warnings"}
+            </span>
+          </div>
+        )}
+        
+        <div className="mt-4 text-xs text-gray-500">
+          Last updated: {formattedDate}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
