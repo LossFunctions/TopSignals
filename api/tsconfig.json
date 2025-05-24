@@ -1,0 +1,23 @@
+// api/tsconfig.json
+{
+    "extends": "../tsconfig.json", // Optional: inherit from root if it has shared base settings
+    "compilerOptions": {
+      "target": "ES2022",
+      "module": "ESNext",         // Output ES Modules
+      "moduleResolution": "NodeNext", // Good for Node.js ESM
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,    // Vercel often uses esbuild/swc which benefit from this
+      "strict": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      // "outDir": "../.vercel/output/functions/api", // Vercel typically manages this.
+                                                      // The important thing is no `noEmit: true`.
+      "baseUrl": "..", // If you need to resolve paths relative to project root
+      "paths": {       // If your API routes use aliases like @/* from the root tsconfig
+        "@/*": ["./src/*"]
+      }
+    },
+    "include": ["./**/*.ts"], // Include all .ts files within this 'api' directory
+    "exclude": ["node_modules"]
+  }
