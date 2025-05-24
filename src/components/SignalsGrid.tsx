@@ -1,5 +1,4 @@
-
-import { SignalCard } from '@/components/SignalCard';
+import SignalCard from '@/components/SignalCard';
 import { useSignals } from '@/hooks/useSignals';
 import { AlertTriangle } from 'lucide-react';
 
@@ -28,8 +27,10 @@ export function SignalsGrid() {
       id="signals-grid" 
       className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
     >
-            {signals.map((signal) => (
-        <SignalCard key={signal.id} signal={signal} />
+      {signals
+        .filter(signal => signal.name === 'Coinbase App Rank')
+        .map((signal) => (
+        <SignalCard key={signal.id} signalName={signal.name} />
       ))}
     </div>
   );

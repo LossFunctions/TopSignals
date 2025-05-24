@@ -1,38 +1,35 @@
+// File: TOPSIGNALS/app/src/components/CoinbaseCard.tsx (or similar path)
 import useSWR from 'swr';
 
-interface AppInfo {
-  id: string;
-  name: string;
-  // Add other properties as needed
-}
-
-interface FeedResponse {
-  feed: {
-    results: AppInfo[];
-  };
-}
-
-// Simple cn utility since @/lib/utils isn't available
+// Simple cn utility (already present)
 const cn = (...classes: (string | boolean | undefined)[]) => 
   classes.filter(Boolean).join(' ');
 
-const COINBASE_APP_ID = '886427730';
+// Define the expected shape of the API response from /api/coinbaseRank
+interface RankApiResponse {
+  rank: number | null; // Rank can be null if not found in top N
+}
 
-const fetcher = async (url: string) => {
+// Updated fetcher for the new API response
+const fetcher = async (url: string): Promise<{ rank: number }> => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error('Failed to fetch Coinbase rank');
+    let errorMessage = `Failed to fetch Coinbase rank: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage; // Use error message from API if available
+    } catch (e) {
+      // Could not parse error JSON, stick with the status code
+    }
+    throw new Error(errorMessage);
   }
-  const data = await response.json();
-  const responseData = data as FeedResponse;
-  const coinbaseApp = responseData.feed.results.find(
-    (app) => app.id === COINBASE_APP_ID
-  );
-  return {
-    rank: coinbaseApp ? responseData.feed.results.indexOf(coinbaseApp) + 1 : 201
-  };
+  const data: RankApiResponse = await response.json();
+  // If rank is null (Coinbase not in top N), default to 201.
+  // SWR expects the fetcher to return the data type specified in useSWR<{ rank: number }>.
+  return { rank: data.rank !== null ? data.rank : 201 };
 };
 
+// RankBadge component (already present and seems fine)
 interface RankBadgeProps {
   rank: number;
   className?: string;
@@ -48,8 +45,9 @@ function RankBadge({ rank, className }: RankBadgeProps) {
   } else if (rank <= 50) {
     badgeText = 'In Top 50';
     badgeClass = 'bg-amber-500/20 text-amber-500 border-amber-500/30';
-  } else {
-    badgeText = '>50';
+  } else { // Covers rank > 50 and the default 201 if not found
+    badgeText = rank > 200 ? '>100' : `>50`; // Or simply '>50' or adjust based on num
+    if (rank >= 201) badgeText = `>100`; // If using num=100 and not found
     badgeClass = 'bg-rose-500/20 text-rose-500 border-rose-500/30';
   }
 
@@ -67,20 +65,23 @@ function RankBadge({ rank, className }: RankBadgeProps) {
 }
 
 export function CoinbaseCard() {
-  const { data, error, isLoading } = useSWR<{ rank: number }>(
+  const { data, error, isLoading } = useSWR<{ rank: number }>( // SWR expects { rank: number }
     '/api/coinbaseRank',
     fetcher,
     { 
       refreshInterval: 300000, // 5 minutes
       revalidateOnFocus: false,
-      shouldRetryOnError: true,
-      errorRetryCount: 3,
+      shouldRetryOnError: true, // Be cautious with retries on 401/auth errors
+      errorRetryCount: 2,     // Reduce retry count for faster feedback on persistent errors
       errorRetryInterval: 5000,
     }
   );
 
-  const rank = data?.rank ?? 201; // Default to 201 if not found
-  const isLoadingState = isLoading || !data;
+  // The fetcher now ensures data.rank is a number (201 if null from API)
+  // So, `data?.rank` will be a number if data is available.
+  // The `?? 201` handles the initial `isLoading` state where `data` is undefined.
+  const rank = data?.rank ?? 201; 
+  const isLoadingState = isLoading && !data && !error; // More precise loading state
 
   return (
     <div
@@ -107,12 +108,14 @@ export function CoinbaseCard() {
             <div className="animate-pulse h-4 w-24 bg-gray-700 rounded"></div>
           </div>
         ) : error ? (
-          <div className="text-rose-500 text-sm">Error loading rank</div>
+          // Display the error message from the fetcher
+          <div className="text-rose-500 text-sm px-2">Error: {error.message}</div>
         ) : (
           <>
             <div className="flex items-baseline justify-center mb-2">
               <span className="text-4xl font-bold text-white">
-                {rank}
+                {/* If rank is 201 (our default for not found), display appropriately */}
+                {rank > 200 ? ">100" : rank}
               </span>
               <RankBadge 
                 rank={rank} 
