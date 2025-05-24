@@ -1,7 +1,7 @@
-// File: TOPSIGNALS/api/coinbaseRank.mjs
+// File: api/coinbaseRank.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const COINBASE_APPLE_ID = '886427730'; // This is a string, ensure comparison is string-to-string
+const COINBASE_APPLE_ID = '886427730';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.SEARCHAPI_IO_KEY;
@@ -11,11 +11,8 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     return res.status(500).json({ error: "API key not configured." });
   }
 
-  // URL confirmed to be working
-  const searchApiUrl = `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store&store=us&term=finance&category_id=6015&sort_by=topfreeapplications`;
-  // Consider adding `&num=100` (or a suitable number) if you want to ensure you get enough results.
-  // For example:
-  // const searchApiUrl = `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store&store=us&term=finance&category_id=6015&sort_by=topfreeapplications&num=100`;
+  // MODIFIED: Added &num=100 to the end of the URL
+  const searchApiUrl = `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store&store=us&term=finance&category_id=6015&sort_by=topfreeapplications&num=100`;
 
   console.log("Attempting to fetch from SearchApi.io with URL:", searchApiUrl);
 
@@ -35,17 +32,11 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
 
     const data = JSON.parse(responseText);
 
-    if (data.search_metadata && data.search_metadata.status === "ErrorOccurred") {
-        console.error("SearchApi.io API error in metadata:", data.error || data.search_metadata.error_message);
-        return res.status(500).json({ error: data.error || data.search_metadata.error_message || "SearchApi.io reported an error in search metadata." });
-    }
-    // Check for top-level error, but allow if organic_results are present (sometimes errors are partial)
     if (data.error && !data.organic_results) { 
         console.error("SearchApi.io API error:", data.error);
         return res.status(500).json({ error: data.error });
     }
 
-    // Corrected parsing based on the observed JSON structure
     const appsList = data.organic_results;
 
     if (!appsList || !Array.isArray(appsList)) {
@@ -55,7 +46,6 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
 
     let coinbaseRank = null;
     for (const app of appsList) {
-      // The product_id from the API is a string. COINBASE_APPLE_ID is also a string.
       const currentAppId = app.product_id; 
       const currentAppPosition = app.position;
 
@@ -67,13 +57,12 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     
     if (coinbaseRank === null) {
         console.warn(`Coinbase (ID: ${COINBASE_APPLE_ID}) not found in the first ${appsList.length} results.`);
-        // The frontend defaults to 201 if rank is null or if the fetcher returns a default.
     } else {
         console.log(`Coinbase found at rank: ${coinbaseRank}`);
     }
 
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate'); // Cache for 5 minutes
-    res.status(200).json({ rank: coinbaseRank }); // rank will be a number or null
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate'); 
+    res.status(200).json({ rank: coinbaseRank });
 
   } catch (err: any) {
     console.error("Error in /api/coinbaseRank handler:", err);
