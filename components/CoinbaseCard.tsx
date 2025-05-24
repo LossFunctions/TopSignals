@@ -1,35 +1,66 @@
-// File: TOPSIGNALS/app/src/components/CoinbaseCard.tsx (or similar path)
+// File: TOPSIGNALS/app/src/components/CoinbaseCard.tsx
+
 import useSWR from 'swr';
 
-// Simple cn utility (already present)
+// Simple cn utility
 const cn = (...classes: (string | boolean | undefined)[]) => 
   classes.filter(Boolean).join(' ');
 
-// Define the expected shape of the API response from /api/coinbaseRank
 interface RankApiResponse {
-  rank: number | null; // Rank can be null if not found in top N
+  rank: number | null;
 }
 
-// Updated fetcher for the new API response
 const fetcher = async (url: string): Promise<{ rank: number }> => {
-  const response = await fetch(url);
+  console.log(`[Fetcher] Attempting to fetch from URL: ${url}`);
+  const response = await fetch(url); // Fetches from /api/coinbaseRank
+  
+  console.log(`[Fetcher] Received response from ${url}. Status: ${response.status}, OK: ${response.ok}`);
+
   if (!response.ok) {
-    let errorMessage = `Failed to fetch Coinbase rank: ${response.status}`;
+    let errorMessage = `[Fetcher] Failed to fetch data from ${url}. Status: ${response.status}`;
+    let errorResponseBody = null;
     try {
-      const errorData = await response.json();
-      errorMessage = errorData.error || errorMessage; // Use error message from API if available
+      errorResponseBody = await response.json();
+      console.error(`[Fetcher] Backend error response body for ${url}:`, errorResponseBody);
+      // Use the error message from the backend's JSON response if available
+      if (errorResponseBody && errorResponseBody.error) {
+        errorMessage = errorResponseBody.error; 
+      }
     } catch (e) {
-      // Could not parse error JSON, stick with the status code
+      console.warn(`[Fetcher] Could not parse error response body as JSON for ${url}. Status: ${response.status}. Error:`, e);
+      // If JSON parsing fails, try to get text for more context
+      try {
+        const errorText = await response.text();
+        console.warn(`[Fetcher] Error response body as text for ${url}:`, errorText);
+      } catch (textErr) {
+        console.warn(`[Fetcher] Could not get error response body as text either for ${url}.`);
+      }
     }
+    console.error(`[Fetcher] Throwing error: ${errorMessage}`);
     throw new Error(errorMessage);
   }
-  const data: RankApiResponse = await response.json();
-  // If rank is null (Coinbase not in top N), default to 201.
-  // SWR expects the fetcher to return the data type specified in useSWR<{ rank: number }>.
-  return { rank: data.rank !== null ? data.rank : 201 };
+
+  // If response.ok is true
+  try {
+    const data: RankApiResponse = await response.json();
+    console.log(`[Fetcher] Successfully parsed JSON data from ${url}:`, data);
+    
+    // Check if the expected 'rank' property exists
+    if (typeof data.rank === 'number' || data.rank === null) {
+      // Data structure is as expected { rank: number | null }
+      return { rank: data.rank !== null ? data.rank : 201 };
+    } else {
+      // Data structure is NOT as expected
+      console.error(`[Fetcher] Invalid data structure from ${url}. 'rank' property missing or not number/null. Received:`, data);
+      throw new Error(`Invalid data structure from backend (rank property issue)`);
+    }
+  } catch (e) {
+    console.error(`[Fetcher] Failed to parse successful response JSON from ${url}. Error:`, e);
+    throw new Error(`Failed to parse successful response from backend`);
+  }
 };
 
-// RankBadge component (already present and seems fine)
+// RankBadge component (NO CHANGES NEEDED HERE - it's fine)
 interface RankBadgeProps {
   rank: number;
   className?: string;
@@ -45,9 +76,9 @@ function RankBadge({ rank, className }: RankBadgeProps) {
   } else if (rank <= 50) {
     badgeText = 'In Top 50';
     badgeClass = 'bg-amber-500/20 text-amber-500 border-amber-500/30';
-  } else { // Covers rank > 50 and the default 201 if not found
-    badgeText = rank > 200 ? '>100' : `>50`; // Or simply '>50' or adjust based on num
-    if (rank >= 201) badgeText = `>100`; // If using num=100 and not found
+  } else { 
+    badgeText = rank > 200 ? '>100' : `>50`; 
+    if (rank >= 201) badgeText = `>100`; 
     badgeClass = 'bg-rose-500/20 text-rose-500 border-rose-500/30';
   }
 
@@ -64,24 +95,22 @@ function RankBadge({ rank, className }: RankBadgeProps) {
   );
 }
 
+// CoinbaseCard component (NO CHANGES NEEDED TO THE COMPONENT LOGIC ITSELF)
 export function CoinbaseCard() {
-  const { data, error, isLoading } = useSWR<{ rank: number }>( // SWR expects { rank: number }
+  const { data, error, isLoading } = useSWR<{ rank: number }>(
     '/api/coinbaseRank',
-    fetcher,
+    fetcher, // Uses the updated fetcher above
     { 
-      refreshInterval: 300000, // 5 minutes
+      refreshInterval: 300000,
       revalidateOnFocus: false,
-      shouldRetryOnError: true, // Be cautious with retries on 401/auth errors
-      errorRetryCount: 2,     // Reduce retry count for faster feedback on persistent errors
+      shouldRetryOnError: true, 
+      errorRetryCount: 2,     
       errorRetryInterval: 5000,
     }
   );
 
-  // The fetcher now ensures data.rank is a number (201 if null from API)
-  // So, `data?.rank` will be a number if data is available.
-  // The `?? 201` handles the initial `isLoading` state where `data` is undefined.
   const rank = data?.rank ?? 201; 
-  const isLoadingState = isLoading && !data && !error; // More precise loading state
+  const isLoadingState = isLoading && !data && !error;
 
   return (
     <div
@@ -108,13 +137,11 @@ export function CoinbaseCard() {
             <div className="animate-pulse h-4 w-24 bg-gray-700 rounded"></div>
           </div>
         ) : error ? (
-          // Display the error message from the fetcher
           <div className="text-rose-500 text-sm px-2">Error: {error.message}</div>
         ) : (
           <>
             <div className="flex items-baseline justify-center mb-2">
               <span className="text-4xl font-bold text-white">
-                {/* If rank is 201 (our default for not found), display appropriately */}
                 {rank > 200 ? ">100" : rank}
               </span>
               <RankBadge 
