@@ -11,10 +11,10 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
 
   try {
-    // Fetch top 200 finance apps
+    // Fetch top 200 finance apps - NO search term, just category listing
     const financeUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store` +
-      `&store=us&term=finance&category_id=6015&sort_by=topfreeapplications&num=200`;
+      `&store=us&category_id=6015&sort_by=topfreeapplications&num=200`;
 
     console.log("Fetching finance rankings...");
     const financeResponse = await fetch(financeUrl);
@@ -39,26 +39,22 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       }
     }
 
-    // For overall rank, we need to fetch from all categories
-    // SearchAPI doesn't have a direct way to get overall rank, so we'll search for Coinbase specifically
+    // For overall rank, get top 200 apps across all categories
     const overallUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store` +
-      `&store=us&term=coinbase`;
+      `&store=us&sort_by=topfreeapplications&num=200`;
 
-    console.log("Fetching overall ranking...");
+    console.log("Fetching overall rankings...");
     const overallResponse = await fetch(overallUrl);
     
     if (overallResponse.ok) {
       const overallData = await overallResponse.json();
-      if (overallData.organic_results && overallData.organic_results.length > 0) {
-        const coinbaseApp = overallData.organic_results[0];
-        if (coinbaseApp.product_id === COINBASE_APPLE_ID) {
-          // Check if there's a rank field in the app details
-          if (coinbaseApp.rank) {
-            overallRank = coinbaseApp.rank;
-          } else {
-            // If no rank field, we can't determine overall rank
-            console.log("Overall rank not available in SearchAPI response");
+      if (overallData.organic_results && Array.isArray(overallData.organic_results)) {
+        for (const app of overallData.organic_results) {
+          if (app.product_id === COINBASE_APPLE_ID) {
+            overallRank = app.position;
+            console.log(`Coinbase found at overall rank: ${overallRank}`);
+            break;
           }
         }
       }
