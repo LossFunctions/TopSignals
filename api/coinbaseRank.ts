@@ -11,57 +11,67 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
 
   try {
-    // Fetch top 200 finance apps - NO search term, just category listing
+    // EXACTLY like the original working code - search for "finance" in finance category
     const financeUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store` +
-      `&store=us&category_id=6015&sort_by=topfreeapplications&num=200`;
+      `&store=us&term=finance&category_id=6015&sort_by=topfreeapplications&num=100`;
 
-    console.log("Fetching finance rankings...");
+    console.log("Fetching finance category apps...");
     const financeResponse = await fetch(financeUrl);
+    const financeText = await financeResponse.text();
     
     if (!financeResponse.ok) {
-      throw new Error(`Finance API error: ${financeResponse.status} ${financeResponse.statusText}`);
+      console.error(`Finance API error: ${financeResponse.status} ${financeText}`);
+      return res.status(500).json({ error: `Finance API failed: ${financeResponse.status}` });
     }
 
-    const financeData = await financeResponse.json();
+    const financeData = JSON.parse(financeText);
     
     let financeRank: number | null = null;
     let overallRank: number | null = null;
 
-    // Find Coinbase in finance results
-    if (financeData.organic_results && Array.isArray(financeData.organic_results)) {
-      for (const app of financeData.organic_results) {
+    // Find Coinbase in finance results - EXACTLY like original
+    const financeApps = financeData.organic_results;
+    if (financeApps && Array.isArray(financeApps)) {
+      for (const app of financeApps) {
         if (app.product_id === COINBASE_APPLE_ID) {
           financeRank = app.position;
-          console.log(`Coinbase found at finance rank: ${financeRank}`);
+          console.log(`Coinbase found at finance position: ${financeRank}`);
           break;
         }
       }
     }
 
-    // For overall rank, get top 200 apps across all categories
+    // For overall, search without category restriction
     const overallUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store` +
-      `&store=us&sort_by=topfreeapplications&num=200`;
+      `&store=us&term=apps&sort_by=topfreeapplications&num=200`;
 
-    console.log("Fetching overall rankings...");
     const overallResponse = await fetch(overallUrl);
     
     if (overallResponse.ok) {
       const overallData = await overallResponse.json();
-      if (overallData.organic_results && Array.isArray(overallData.organic_results)) {
-        for (const app of overallData.organic_results) {
+      const overallApps = overallData.organic_results;
+      
+      if (overallApps && Array.isArray(overallApps)) {
+        for (const app of overallApps) {
           if (app.product_id === COINBASE_APPLE_ID) {
             overallRank = app.position;
-            console.log(`Coinbase found at overall rank: ${overallRank}`);
+            console.log(`Coinbase found at overall position: ${overallRank}`);
             break;
           }
         }
       }
     }
 
-    console.log(`Final ranks - Finance: ${financeRank}, Overall: ${overallRank}`);
-    
+    // If not found in results, log warning but still return nulls
+    if (financeRank === null) {
+      console.warn(`Coinbase not found in finance category results`);
+    }
+    if (overallRank === null) {
+      console.warn(`Coinbase not found in overall results`);
+    }
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     return res.status(200).json({ 
       financeRank: financeRank,
