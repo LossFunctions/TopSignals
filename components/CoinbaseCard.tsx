@@ -54,13 +54,13 @@ export function CoinbaseCard() {
         <div>
           <div className="text-sm text-muted-foreground">Finance Category</div>
           <div className="text-2xl font-bold">
-            {financeRank ? `#${financeRank}` : '—'}
+            {typeof financeRank === 'number' ? `#${financeRank}` : '—'}
           </div>
         </div>
         <div>
           <div className="text-sm text-muted-foreground">Overall</div>
           <div className="text-2xl font-bold">
-            {overallRank ? (
+            {typeof overallRank === 'number' ? (
               `#${overallRank}`
             ) : (
               <div>

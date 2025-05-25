@@ -4,8 +4,8 @@ export interface RankApiResponse {
 }
 
 export interface RankData {
-  financeRank: number;
-  overallRank: number;
+  financeRank: number | null;
+  overallRank: number | null;
 }
 
 export const coinbaseRankFetcher = async (
@@ -16,8 +16,9 @@ export const coinbaseRankFetcher = async (
     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   }
   const data: RankApiResponse = await res.json();
+  // Simply pass through the values without converting null to 999
   return { 
-    financeRank: data.financeRank !== null ? data.financeRank : 999,
-    overallRank: data.overallRank !== null ? data.overallRank : 999
+    financeRank: data.financeRank,
+    overallRank: data.overallRank
   };
 };
