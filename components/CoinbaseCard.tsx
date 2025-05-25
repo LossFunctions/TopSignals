@@ -41,8 +41,8 @@ export function CoinbaseCard() {
     );
   }
 
-  const financeRank = data?.financeRank ?? 999;
-  const overallRank = data?.overallRank ?? 999;
+  const financeRank = data?.financeRank;
+  const overallRank = data?.overallRank;
 
   return (
     <Card>
@@ -53,11 +53,15 @@ export function CoinbaseCard() {
       <CardContent className="space-y-3">
         <div>
           <div className="text-sm text-muted-foreground">Finance Category</div>
-          <div className="text-2xl font-bold">#{financeRank}</div>
+          <div className="text-2xl font-bold">
+            {financeRank ? `#${financeRank}` : '—'}
+          </div>
         </div>
         <div>
           <div className="text-sm text-muted-foreground">Overall</div>
-          <div className="text-2xl font-bold">#{overallRank}</div>
+          <div className="text-2xl font-bold">
+            {overallRank ? `#${overallRank}` : '>200'}
+          </div>
         </div>
       </CardContent>
     </Card>

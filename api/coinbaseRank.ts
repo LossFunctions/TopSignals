@@ -64,15 +64,16 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     }
 
     // CORRECT ENDPOINT: apple_app_store_top_charts for Overall (all categories)
+    // Try to get up to 500 apps to find Coinbase
     const overallChartsUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
       `&engine=apple_app_store_top_charts` +
       `&store=us` +
       `&category=all_apps` +
       `&chart=top_free` +
-      `&num=200`;
+      `&num=500`; // Increased from 200 to 500
 
-    console.log("Fetching overall top charts...");
+    console.log("Fetching overall top charts (up to 500 apps)...");
     const overallResponse = await fetch(overallChartsUrl);
     
     if (overallResponse.ok) {
@@ -94,7 +95,43 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         }
         
         if (!overallRank) {
-          console.log("Coinbase not found in overall top 200");
+          console.log("Coinbase not found in overall top 200, searching specifically...");
+          
+          // Fallback: Search for Coinbase specifically to get its rank
+          const coinbaseSearchUrl = 
+            `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
+            `&engine=apple_app_store` +
+            `&store=us` +
+            `&term=coinbase` +
+            `&num=10`;
+          
+          const searchResponse = await fetch(coinbaseSearchUrl);
+          
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            
+            if (searchData.organic_results && Array.isArray(searchData.organic_results)) {
+              for (const app of searchData.organic_results) {
+                if (app.product_id === COINBASE_APPLE_ID || 
+                    app.bundle_id === COINBASE_BUNDLE_ID) {
+                  // Check if the app has a rank field
+                  if (app.rank) {
+                    overallRank = app.rank;
+                    console.log(`Coinbase overall rank from search: ${overallRank}`);
+                  } else if (app.position) {
+                    // Some responses might use position instead of rank
+                    overallRank = app.position;
+                    console.log(`Coinbase overall position from search: ${overallRank}`);
+                  } else {
+                    // If no rank info, we can't determine it
+                    console.log("No rank information available in search results");
+                    console.log("App data:", JSON.stringify(app, null, 2));
+                  }
+                  break;
+                }
+              }
+            }
+          }
         }
       }
     } else {
