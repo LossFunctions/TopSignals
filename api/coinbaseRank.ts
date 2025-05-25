@@ -16,7 +16,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     let financeRank: number | null = null;
     let overallRank: number | null = null;
 
-    // SECTION A: FINANCE CATEGORY (unchanged - this works fine)
+    // FINANCE CATEGORY - This works fine
     const financeChartsUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
       `&engine=apple_app_store_top_charts` +
@@ -52,7 +52,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       }
     }
 
-    // SECTION B: OVERALL RANKING - Single top 100 request (NO PAGINATION)
+    // OVERALL RANKING - Single top 100 request
     console.log("Fetching overall top 100 charts...");
     const overallChartsUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
@@ -82,7 +82,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       }
     }
 
-    // SECTION C: SEARCH FALLBACK if not in top 100
+    // SEARCH FALLBACK - Only use rank_overall or rank (NOT position)
     if (!overallRank) {
       console.log("Coinbase not in top 100, using search fallback...");
       
@@ -101,20 +101,21 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         
         if (searchData.organic_results && Array.isArray(searchData.organic_results)) {
           for (const app of searchData.organic_results) {
-            // Flexible matching for all possible ID fields
+            // Check if this is Coinbase
             if (Number(app.id) === COINBASE_APPLE_ID ||
                 Number(app.product_id) === COINBASE_APPLE_ID ||
                 app.bundle_id === COINBASE_BUNDLE_ID) {
-              // Try multiple rank fields in order of preference
-              overallRank = app.rank_overall || app.rank || app.position || null;
-              console.log(`Coinbase found via search with rank: ${overallRank}`);
-              console.log('Coinbase app data:', app);
+              // IMPORTANT: Only use rank_overall or rank, NOT position
+              // position is just the index in search results (1-20), not the chart rank
+              overallRank = app.rank_overall || app.rank || null;
+              
+              if (overallRank) {
+                console.log(`Coinbase found via search with rank: ${overallRank}`);
+              } else {
+                console.log('Search returned no rank fields - treating as >100');
+              }
               break;
             }
-          }
-          
-          if (!overallRank) {
-            console.log("Coinbase found in search but no rank field available");
           }
         }
       } else {
