@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Use numbers, not strings!
+// Constants
 const COINBASE_APPLE_ID = 886427730; // number
 const COINBASE_BUNDLE_ID = 'com.coinbase.app';
-const MAX_PAGES = 5; // Scan up to page 5 (positions 1-1000)
+const PAGE_SIZE = 100;  // SearchApi fixed page length
+const MAX_PAGES = 10;   // stops at rank 1000
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.SEARCHAPI_IO_KEY;
@@ -20,8 +21,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       `&engine=apple_app_store_top_charts` +
       `&store=us` +
       `&category=finance_apps` +
-      `&chart=top_free` +
-      `&num=200`;
+      `&chart=top_free`;
 
     console.log("Fetching finance category top charts...");
     const financeResponse = await fetch(financeChartsUrl);
@@ -44,18 +44,18 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       for (let i = 0; i < financeData.top_charts.length; i++) {
         const app = financeData.top_charts[i];
         
-        // Compare numbers properly!
-        if (app.id === COINBASE_APPLE_ID || 
+        // Compare with proper type conversion
+        if (String(app.id) === String(COINBASE_APPLE_ID) || 
             app.bundle_id === COINBASE_BUNDLE_ID ||
-            app.title?.toLowerCase().includes('coinbase')) {
-          financeRank = app.position || (i + 1);
-          console.log(`Coinbase found in finance! Position: ${financeRank}`);
+            (app.title ?? '').toLowerCase().includes('coinbase')) {
+          financeRank = app.position ?? (i + 1);
+          console.log(`Coinbase found in finance at #${financeRank}`);
           break;
         }
       }
     }
 
-    // OVERALL RANKING - Paginated approach
+    // OVERALL RANKING - Paginated approach with correct page size
     console.log("Fetching overall top charts with pagination...");
     
     for (let page = 1; page <= MAX_PAGES; page++) {
@@ -64,45 +64,35 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         `&engine=apple_app_store_top_charts` +
         `&store=us` +
         `&chart=top_free` +
-        `&num=200` +
-        `&page=${page}`; // Note: omitting category entirely for overall
+        `&page=${page}`; // No num parameter, no category
 
-      console.log(`Fetching overall page ${page}...`);
       const overallResponse = await fetch(overallChartsUrl);
       
       if (!overallResponse.ok) {
         console.error(`Overall page ${page} failed: ${overallResponse.status}`);
-        break; // Stop pagination on error
+        break;
       }
 
       const overallData = await overallResponse.json();
+      const apps = overallData.top_charts || [];
       
-      if (overallData.top_charts && Array.isArray(overallData.top_charts)) {
-        console.log(`Page ${page}: Found ${overallData.top_charts.length} apps`);
+      console.log(`Fetched page ${page}, rows: ${apps.length}`);
+      
+      for (let i = 0; i < apps.length; i++) {
+        const app = apps[i];
         
-        for (let i = 0; i < overallData.top_charts.length; i++) {
-          const app = overallData.top_charts[i];
-          
-          // Proper type comparison
-          if (app.id === COINBASE_APPLE_ID || 
-              app.bundle_id === COINBASE_BUNDLE_ID ||
-              app.title?.toLowerCase().includes('coinbase')) {
-            // Calculate actual position considering pagination
-            const positionOnPage = app.position || (i + 1);
-            overallRank = ((page - 1) * 200) + positionOnPage;
-            console.log(`Coinbase found on page ${page}! Overall rank: ${overallRank}`);
-            break;
-          }
-        }
-        
-        if (overallRank) break; // Found it, stop pagination
-        
-        // If we got fewer than 200 results, we've reached the end
-        if (overallData.top_charts.length < 200) {
-          console.log(`Reached end of results on page ${page}`);
+        // Proper type-safe comparison
+        if (String(app.id) === String(COINBASE_APPLE_ID) ||
+            app.bundle_id === COINBASE_BUNDLE_ID ||
+            (app.title ?? '').toLowerCase().includes('coinbase')) {
+          overallRank = (page - 1) * PAGE_SIZE + (app.position ?? (i + 1));
+          console.log(`Coinbase found at #${overallRank}`);
           break;
         }
       }
+      
+      if (overallRank) break; // found it
+      if (apps.length < PAGE_SIZE) break; // last page reached
     }
 
     // FALLBACK: Search for Coinbase directly if not found in top 1000
@@ -123,10 +113,9 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         
         if (searchData.organic_results && Array.isArray(searchData.organic_results)) {
           for (const app of searchData.organic_results) {
-            // Check both ID types
-            const appId = typeof app.product_id === 'string' ? parseInt(app.product_id) : app.product_id;
-            
-            if (appId === COINBASE_APPLE_ID || app.bundle_id === COINBASE_BUNDLE_ID) {
+            // Proper type conversion
+            if (Number(app.product_id) === COINBASE_APPLE_ID || 
+                app.bundle_id === COINBASE_BUNDLE_ID) {
               // Try different rank fields
               overallRank = app.rank_overall || app.rank || app.position || null;
               if (overallRank) {
