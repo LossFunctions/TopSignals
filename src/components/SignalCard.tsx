@@ -70,7 +70,7 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
               <div>
                 <div className="text-lg">Outside Top 100</div>
                 <div className="text-sm font-normal text-muted-foreground">
-                  Currently outside of top 100 apps
+                  Currently outside of the top 100 apps in overall charts
                 </div>
               </div>
             )}

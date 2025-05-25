@@ -1,4 +1,5 @@
 import SignalCard from '@/components/SignalCard';
+import { PiCycleCard } from '@/components/PiCycleCard';
 import { useSignals } from '@/hooks/useSignals';
 import { AlertTriangle } from 'lucide-react';
 
@@ -22,15 +23,32 @@ export function SignalsGrid() {
     );
   }
 
+  // Define which signals from the database to show
+  const databaseSignalsToShow = ['Coinbase App Rank'];
+  
+  // Define custom indicator components to include
+  const customIndicators = [
+    { id: 'pi-cycle', component: <PiCycleCard /> },
+    // Add more custom indicators here in the future:
+    // { id: 'rsi-indicator', component: <RSICard /> },
+    // { id: 'fear-greed', component: <FearGreedCard /> },
+  ];
+
   return (
     <div 
       id="signals-grid" 
       className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
     >
+      {/* Database-driven signals */}
       {signals
-        .filter(signal => signal.name === 'Coinbase App Rank')
+        .filter(signal => databaseSignalsToShow.includes(signal.name))
         .map((signal) => (
-        <SignalCard key={signal.id} signalName={signal.name} />
+          <SignalCard key={signal.id} signalName={signal.name} />
+        ))}
+      
+      {/* Custom indicator components */}
+      {customIndicators.map(({ id, component }) => (
+        <div key={id}>{component}</div>
       ))}
     </div>
   );
