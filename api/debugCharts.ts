@@ -8,36 +8,26 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
 
   try {
-    // Try different URL patterns to see what works
-    const urls = [
-      // Chart endpoint
-      `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store&store=us&category_id=6015&chart=topfreeapplications&num=10`,
-      // Search with sort
-      `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store&store=us&category_id=6015&sort_by=topfreeapplications&num=10`,
-      // Direct search for Coinbase
-      `https://www.searchapi.io/api/v1/search?api_key=${apiKey}&engine=apple_app_store&store=us&term=coinbase&num=5`
-    ];
+    // Test the CORRECT top charts endpoint
+    const testUrl = 
+      `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
+      `&engine=apple_app_store_top_charts` +
+      `&store=us` +
+      `&category=finance_apps` +
+      `&chart=top_free` +
+      `&num=10`;
 
-    const results = [];
+    console.log("Testing URL:", testUrl);
+    const response = await fetch(testUrl);
+    const data = await response.json();
     
-    for (const [index, url] of urls.entries()) {
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      results.push({
-        urlIndex: index,
-        status: response.status,
-        hasOrganicResults: !!data.organic_results,
-        organicResultsCount: data.organic_results?.length || 0,
-        sampleApp: data.organic_results?.[0] || null,
-        allKeys: Object.keys(data)
-      });
-    }
-
     return res.status(200).json({ 
-      debug: true,
-      results,
-      searchApiDocs: "https://www.searchapi.io/docs/apple-app-store"
+      status: response.status,
+      hasTopCharts: !!data.top_charts,
+      topChartsCount: data.top_charts?.length || 0,
+      firstApp: data.top_charts?.[0] || null,
+      allResponseKeys: Object.keys(data),
+      searchApiDocs: "https://www.searchapi.io/docs/apple-app-store-top-charts"
     });
 
   } catch (err: any) {
