@@ -1,10 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Constants
-const COINBASE_APPLE_ID = 886427730; // number
+const COINBASE_APPLE_ID = 886427730;
 const COINBASE_BUNDLE_ID = 'com.coinbase.app';
-const PAGE_SIZE = 100;  // SearchApi fixed page length
-const MAX_PAGES = 10;   // stops at rank 1000
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.SEARCHAPI_IO_KEY;
@@ -15,7 +13,10 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
 
   try {
-    // FINANCE CATEGORY - This is working fine
+    let financeRank: number | null = null;
+    let overallRank: number | null = null;
+
+    // SECTION A: FINANCE CATEGORY (unchanged - this works fine)
     const financeChartsUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
       `&engine=apple_app_store_top_charts` +
@@ -34,9 +35,6 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
 
     const financeData = await financeResponse.json();
     
-    let financeRank: number | null = null;
-    let overallRank: number | null = null;
-
     // Parse finance charts
     if (financeData.top_charts && Array.isArray(financeData.top_charts)) {
       console.log(`Found ${financeData.top_charts.length} apps in finance top charts`);
@@ -44,7 +42,6 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       for (let i = 0; i < financeData.top_charts.length; i++) {
         const app = financeData.top_charts[i];
         
-        // Compare with proper type conversion
         if (String(app.id) === String(COINBASE_APPLE_ID) || 
             app.bundle_id === COINBASE_BUNDLE_ID ||
             (app.title ?? '').toLowerCase().includes('coinbase')) {
@@ -55,78 +52,73 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       }
     }
 
-    // OVERALL RANKING - Paginated approach with correct page size
-    console.log("Fetching overall top charts with pagination...");
+    // SECTION B: OVERALL RANKING - Single top 100 request (NO PAGINATION)
+    console.log("Fetching overall top 100 charts...");
+    const overallChartsUrl = 
+      `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
+      `&engine=apple_app_store_top_charts` +
+      `&store=us` +
+      `&chart=top_free`;
+
+    const overallResponse = await fetch(overallChartsUrl);
     
-    for (let page = 1; page <= MAX_PAGES; page++) {
-      const overallChartsUrl = 
-        `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
-        `&engine=apple_app_store_top_charts` +
-        `&store=us` +
-        `&chart=top_free` +
-        `&page=${page}`; // No num parameter, no category
-
-      const overallResponse = await fetch(overallChartsUrl);
-      
-      if (!overallResponse.ok) {
-        console.error(`Overall page ${page} failed: ${overallResponse.status}`);
-        break;
-      }
-
+    if (overallResponse.ok) {
       const overallData = await overallResponse.json();
       const apps = overallData.top_charts || [];
       
-      console.log(`Fetched page ${page}, rows: ${apps.length}`);
+      console.log(`Overall top charts returned ${apps.length} apps`);
       
+      // Check if Coinbase is in top 100
       for (let i = 0; i < apps.length; i++) {
         const app = apps[i];
         
-        // Proper type-safe comparison
         if (String(app.id) === String(COINBASE_APPLE_ID) ||
             app.bundle_id === COINBASE_BUNDLE_ID ||
             (app.title ?? '').toLowerCase().includes('coinbase')) {
-          overallRank = (page - 1) * PAGE_SIZE + (app.position ?? (i + 1));
-          console.log(`Coinbase found at #${overallRank}`);
+          overallRank = app.position ?? (i + 1);
+          console.log(`Coinbase found in overall top 100 at #${overallRank}`);
           break;
         }
       }
-      
-      if (overallRank) break; // found it
-      if (apps.length < PAGE_SIZE) break; // last page reached
     }
 
-    // FALLBACK: Search for Coinbase directly if not found in top 1000
+    // SECTION C: SEARCH FALLBACK if not in top 100
     if (!overallRank) {
-      console.log("Coinbase not found in top 1000, using search fallback...");
+      console.log("Coinbase not in top 100, using search fallback...");
       
       const searchUrl = 
         `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
         `&engine=apple_app_store` +
         `&store=us` +
         `&term=coinbase` +
-        `&num=10`;
+        `&num=20`;
       
       const searchResponse = await fetch(searchUrl);
       
       if (searchResponse.ok) {
         const searchData = await searchResponse.json();
+        console.log('Search fallback first result:', searchData.organic_results?.[0]);
         
         if (searchData.organic_results && Array.isArray(searchData.organic_results)) {
           for (const app of searchData.organic_results) {
-            // Proper type conversion
-            if (Number(app.product_id) === COINBASE_APPLE_ID || 
+            // Flexible matching for all possible ID fields
+            if (Number(app.id) === COINBASE_APPLE_ID ||
+                Number(app.product_id) === COINBASE_APPLE_ID ||
                 app.bundle_id === COINBASE_BUNDLE_ID) {
-              // Try different rank fields
+              // Try multiple rank fields in order of preference
               overallRank = app.rank_overall || app.rank || app.position || null;
-              if (overallRank) {
-                console.log(`Coinbase rank from search: ${overallRank}`);
-              } else {
-                console.log("No rank information in search results");
-              }
+              console.log(`Coinbase found via search with rank: ${overallRank}`);
+              console.log('Coinbase app data:', app);
               break;
             }
           }
+          
+          if (!overallRank) {
+            console.log("Coinbase found in search but no rank field available");
+          }
         }
+      } else {
+        console.error(`Search fallback failed: ${searchResponse.status}`);
       }
     }
 
