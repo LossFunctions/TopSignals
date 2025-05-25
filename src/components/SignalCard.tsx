@@ -64,7 +64,7 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
         <div>
           <div className="text-sm text-muted-foreground">Overall</div>
           <div className="text-2xl font-bold">
-            {overallRank ? `#${overallRank}` : '>200'}
+            {overallRank ? `#${overallRank}` : '>1000'}
           </div>
         </div>
       </CardContent>

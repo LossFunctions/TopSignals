@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const COINBASE_APPLE_ID = '886427730';
+// Use numbers, not strings!
+const COINBASE_APPLE_ID = 886427730; // number
 const COINBASE_BUNDLE_ID = 'com.coinbase.app';
+const MAX_PAGES = 5; // Scan up to page 5 (positions 1-1000)
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.SEARCHAPI_IO_KEY;
@@ -12,7 +14,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
 
   try {
-    // CORRECT ENDPOINT: apple_app_store_top_charts for Finance category
+    // FINANCE CATEGORY - This is working fine
     const financeChartsUrl = 
       `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
       `&engine=apple_app_store_top_charts` +
@@ -35,107 +37,108 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     let financeRank: number | null = null;
     let overallRank: number | null = null;
 
-    // Parse the top_charts array (not organic_results!)
+    // Parse finance charts
     if (financeData.top_charts && Array.isArray(financeData.top_charts)) {
       console.log(`Found ${financeData.top_charts.length} apps in finance top charts`);
       
       for (let i = 0; i < financeData.top_charts.length; i++) {
         const app = financeData.top_charts[i];
         
-        // Check both ID and bundle_id
+        // Compare numbers properly!
         if (app.id === COINBASE_APPLE_ID || 
             app.bundle_id === COINBASE_BUNDLE_ID ||
             app.title?.toLowerCase().includes('coinbase')) {
-          // Position is 1-indexed in the response
           financeRank = app.position || (i + 1);
-          console.log(`Coinbase found in finance! Position: ${financeRank}, Title: ${app.title}`);
+          console.log(`Coinbase found in finance! Position: ${financeRank}`);
           break;
         }
       }
-      
-      if (!financeRank) {
-        console.log("Coinbase not found in finance top 200. Sample apps:");
-        financeData.top_charts.slice(0, 5).forEach((app: any) => {
-          console.log(`- ${app.position}. ${app.title} (ID: ${app.id})`);
-        });
-      }
-    } else {
-      console.error("No top_charts array in finance response");
     }
 
-    // CORRECT ENDPOINT: apple_app_store_top_charts for Overall (all categories)
-    // Try to get up to 500 apps to find Coinbase
-    const overallChartsUrl = 
-      `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
-      `&engine=apple_app_store_top_charts` +
-      `&store=us` +
-      `&category=all_apps` +
-      `&chart=top_free` +
-      `&num=500`; // Increased from 200 to 500
-
-    console.log("Fetching overall top charts (up to 500 apps)...");
-    const overallResponse = await fetch(overallChartsUrl);
+    // OVERALL RANKING - Paginated approach
+    console.log("Fetching overall top charts with pagination...");
     
-    if (overallResponse.ok) {
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const overallChartsUrl = 
+        `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
+        `&engine=apple_app_store_top_charts` +
+        `&store=us` +
+        `&chart=top_free` +
+        `&num=200` +
+        `&page=${page}`; // Note: omitting category entirely for overall
+
+      console.log(`Fetching overall page ${page}...`);
+      const overallResponse = await fetch(overallChartsUrl);
+      
+      if (!overallResponse.ok) {
+        console.error(`Overall page ${page} failed: ${overallResponse.status}`);
+        break; // Stop pagination on error
+      }
+
       const overallData = await overallResponse.json();
       
       if (overallData.top_charts && Array.isArray(overallData.top_charts)) {
-        console.log(`Found ${overallData.top_charts.length} apps in overall top charts`);
+        console.log(`Page ${page}: Found ${overallData.top_charts.length} apps`);
         
         for (let i = 0; i < overallData.top_charts.length; i++) {
           const app = overallData.top_charts[i];
           
+          // Proper type comparison
           if (app.id === COINBASE_APPLE_ID || 
               app.bundle_id === COINBASE_BUNDLE_ID ||
               app.title?.toLowerCase().includes('coinbase')) {
-            overallRank = app.position || (i + 1);
-            console.log(`Coinbase found in overall! Position: ${overallRank}`);
+            // Calculate actual position considering pagination
+            const positionOnPage = app.position || (i + 1);
+            overallRank = ((page - 1) * 200) + positionOnPage;
+            console.log(`Coinbase found on page ${page}! Overall rank: ${overallRank}`);
             break;
           }
         }
         
-        if (!overallRank) {
-          console.log("Coinbase not found in overall top 200, searching specifically...");
-          
-          // Fallback: Search for Coinbase specifically to get its rank
-          const coinbaseSearchUrl = 
-            `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
-            `&engine=apple_app_store` +
-            `&store=us` +
-            `&term=coinbase` +
-            `&num=10`;
-          
-          const searchResponse = await fetch(coinbaseSearchUrl);
-          
-          if (searchResponse.ok) {
-            const searchData = await searchResponse.json();
+        if (overallRank) break; // Found it, stop pagination
+        
+        // If we got fewer than 200 results, we've reached the end
+        if (overallData.top_charts.length < 200) {
+          console.log(`Reached end of results on page ${page}`);
+          break;
+        }
+      }
+    }
+
+    // FALLBACK: Search for Coinbase directly if not found in top 1000
+    if (!overallRank) {
+      console.log("Coinbase not found in top 1000, using search fallback...");
+      
+      const searchUrl = 
+        `https://www.searchapi.io/api/v1/search?api_key=${apiKey}` +
+        `&engine=apple_app_store` +
+        `&store=us` +
+        `&term=coinbase` +
+        `&num=10`;
+      
+      const searchResponse = await fetch(searchUrl);
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.json();
+        
+        if (searchData.organic_results && Array.isArray(searchData.organic_results)) {
+          for (const app of searchData.organic_results) {
+            // Check both ID types
+            const appId = typeof app.product_id === 'string' ? parseInt(app.product_id) : app.product_id;
             
-            if (searchData.organic_results && Array.isArray(searchData.organic_results)) {
-              for (const app of searchData.organic_results) {
-                if (app.product_id === COINBASE_APPLE_ID || 
-                    app.bundle_id === COINBASE_BUNDLE_ID) {
-                  // Check if the app has a rank field
-                  if (app.rank) {
-                    overallRank = app.rank;
-                    console.log(`Coinbase overall rank from search: ${overallRank}`);
-                  } else if (app.position) {
-                    // Some responses might use position instead of rank
-                    overallRank = app.position;
-                    console.log(`Coinbase overall position from search: ${overallRank}`);
-                  } else {
-                    // If no rank info, we can't determine it
-                    console.log("No rank information available in search results");
-                    console.log("App data:", JSON.stringify(app, null, 2));
-                  }
-                  break;
-                }
+            if (appId === COINBASE_APPLE_ID || app.bundle_id === COINBASE_BUNDLE_ID) {
+              // Try different rank fields
+              overallRank = app.rank_overall || app.rank || app.position || null;
+              if (overallRank) {
+                console.log(`Coinbase rank from search: ${overallRank}`);
+              } else {
+                console.log("No rank information in search results");
               }
+              break;
             }
           }
         }
       }
-    } else {
-      console.error(`Overall API error: ${overallResponse.status}`);
     }
 
     console.log(`Final ranks - Finance: ${financeRank}, Overall: ${overallRank}`);
