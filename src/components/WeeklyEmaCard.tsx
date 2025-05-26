@@ -1,5 +1,4 @@
 // src/components/WeeklyEmaCard.tsx
-import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -72,12 +71,12 @@ export function WeeklyEmaCard() {
       <CardContent>
         <div className="space-y-4">
           {/* Current Price */}
-          {currentPrice && (
+          {currentPrice != null && (
             <div className="pb-2 border-b">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Current BTC Price</span>
                 <span className="font-mono font-semibold">
-                  ${currentPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  ${currentPrice != null ? currentPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
                 </span>
               </div>
             </div>
@@ -95,7 +94,7 @@ export function WeeklyEmaCard() {
                 )}
               </div>
               <span className="text-sm text-muted-foreground font-mono">
-                ${ema50?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || 'N/A'}
+                ${ema50 != null ? ema50.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
               </span>
             </div>
           </div>
@@ -112,7 +111,7 @@ export function WeeklyEmaCard() {
                 )}
               </div>
               <span className="text-sm text-muted-foreground font-mono">
-                ${ema200?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || 'N/A'}
+                ${ema200 != null ? ema200.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
               </span>
             </div>
           </div>

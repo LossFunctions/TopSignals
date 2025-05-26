@@ -1,5 +1,4 @@
 // src/components/MonthlyRsiCard.tsx
-import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -109,7 +108,7 @@ export function MonthlyRsiCard() {
           {/* RSI Value Display */}
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold">
-              {rsiValue !== null ? rsiValue.toFixed(2) : 'N/A'}
+              {rsiValue != null ? rsiValue.toFixed(2) : 'N/A'}
             </span>
             <Badge variant={isDanger ? 'destructive' : 'secondary'}>
               {isDanger ? 'Danger Zone' : 'Normal'}
