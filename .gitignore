@@ -48,3 +48,4 @@ ehthumbs.db
 # Other
 # If you use TypeScript and have .tsbuildinfo files separate from your build output
 # *.tsbuildinfo # Often these are in the build dir (dist) anyway
+.vercel
