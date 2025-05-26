@@ -4,7 +4,19 @@
 const COINBASE_APPLE_ID  = 886427730
 const COINBASE_BUNDLE_ID = 'com.coinbase.app'
 
+// Simple in-memory cache for development
+let lastFetchTime = null;
+let cachedData = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export default async function handler(req, res) {
+  // Check if we have recent cached data (helps in dev with hot reloads)
+  if (cachedData && lastFetchTime && (Date.now() - lastFetchTime < CACHE_DURATION)) {
+    console.log('[CoinbaseRank] Serving from memory cache');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+    return res.status(200).json(cachedData);
+  }
+
   const apiKey = process.env.SEARCHAPI_IO_KEY
   if (!apiKey) {
     console.error('SearchApi.io API key (SEARCHAPI_IO_KEY) is not configured.')
@@ -28,6 +40,12 @@ export default async function handler(req, res) {
 
     if (financeResponse.status === 429) {
       console.error('Finance API quota exceeded (429)')
+      // If we have any old cached data, return it instead of erroring
+      if (cachedData) {
+        console.log('[CoinbaseRank] Quota exceeded, serving stale cache');
+        res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+        return res.status(200).json({ ...cachedData, stale: true });
+      }
       return res.status(429).json({ error: 'finance_quota_exceeded' })
     }
     if (!financeResponse.ok) {
@@ -67,6 +85,12 @@ export default async function handler(req, res) {
 
     if (overallResponse.status === 429) {
       console.error('Overall API quota exceeded (429)')
+      // If we have any old cached data, return it instead of erroring
+      if (cachedData) {
+        console.log('[CoinbaseRank] Quota exceeded, serving stale cache');
+        res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+        return res.status(200).json({ ...cachedData, stale: true });
+      }
       return res.status(429).json({ error: 'overall_quota_exceeded' })
     }
     if (!overallResponse.ok) {
@@ -108,7 +132,10 @@ export default async function handler(req, res) {
 
       if (searchResponse.status === 429) {
         console.error('Search fallback quota exceeded (429)')
-        return res.status(429).json({ error: 'search_quota_exceeded' })
+        // Still return partial data if available
+        const result = { financeRank, overallRank };
+        res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+        return res.status(200).json(result);
       }
       if (!searchResponse.ok) {
         console.error(`Search fallback failed: ${searchResponse.status}`)
@@ -133,12 +160,24 @@ export default async function handler(req, res) {
 
     console.log(`Final ranks - Finance: ${financeRank}, Overall: ${overallRank}`)
 
-    // 4) Send response + cache headers
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=300')
-    return res.status(200).json({ financeRank, overallRank })
+    // Store in cache
+    const result = { financeRank, overallRank };
+    cachedData = result;
+    lastFetchTime = Date.now();
+
+    // 4) Send response + aggressive cache headers
+    // 5 min fresh, 24 hours stale-while-revalidate
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400')
+    return res.status(200).json(result)
 
   } catch (err) {
     console.error('Error in /api/coinbaseRank handler:', err)
+    // If we have cached data, return it even on error
+    if (cachedData) {
+      console.log('[CoinbaseRank] Error occurred, serving stale cache');
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+      return res.status(200).json({ ...cachedData, stale: true });
+    }
     return res.status(500).json({ error: err.message || 'internal server error' })
   }
 }

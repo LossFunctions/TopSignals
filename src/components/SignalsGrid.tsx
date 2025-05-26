@@ -1,5 +1,7 @@
 import SignalCard from '@/components/SignalCard';
 import { PiCycleCard } from '@/components/PiCycleCard';
+import { MonthlyRsiCard } from '@/components/MonthlyRsiCard';
+import { WeeklyEmaCard } from '@/components/WeeklyEmaCard';
 import { useSignals } from '@/hooks/useSignals';
 import { AlertTriangle } from 'lucide-react';
 
@@ -29,8 +31,9 @@ export function SignalsGrid() {
   // Define custom indicator components to include
   const customIndicators = [
     { id: 'pi-cycle', component: <PiCycleCard /> },
+    { id: 'monthly-rsi', component: <MonthlyRsiCard /> },
+    { id: 'weekly-ema', component: <WeeklyEmaCard /> },
     // Add more custom indicators here in the future:
-    // { id: 'rsi-indicator', component: <RSICard /> },
     // { id: 'fear-greed', component: <FearGreedCard /> },
   ];
 
