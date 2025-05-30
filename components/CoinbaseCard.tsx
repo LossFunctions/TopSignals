@@ -62,13 +62,15 @@ export function CoinbaseCard() {
           <div className="text-2xl font-bold">
             {typeof overallRank === 'number' ? (
               `#${overallRank}`
-            ) : (
+            ) : overallRank === '200+' ? (
               <div>
-                <div className="text-lg">Outside Top 100</div>
+                <div className="text-lg">Outside Top 200</div>
                 <div className="text-sm font-normal text-muted-foreground">
-                  Currently outside of top 100 apps
+                  Currently outside of the top 200 apps overall
                 </div>
               </div>
+            ) : (
+              '—'
             )}
           </div>
         </div>

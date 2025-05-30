@@ -1,0 +1,379 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@vercel/gatsby-plugin-vercel-builder": {
+      "name": "@vercel/gatsby-plugin-vercel-builder",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "esbuild"
+      ],
+      "effects": [
+        "@vercel/static-build"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/@vercel/gatsby-plugin-vercel-builder"
+      ],
+      "fixAvailable": {
+        "name": "vercel",
+        "version": "25.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@vercel/node": {
+      "name": "@vercel/node",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "esbuild",
+        "path-to-regexp",
+        "undici"
+      ],
+      "effects": [
+        "vercel"
+      ],
+      "range": ">=2.3.1",
+      "nodes": [
+        "node_modules/@vercel/node",
+        "node_modules/vercel/node_modules/@vercel/node"
+      ],
+      "fixAvailable": {
+        "name": "@vercel/node",
+        "version": "2.3.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@vercel/remix-builder": {
+      "name": "@vercel/remix-builder",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "path-to-regexp"
+      ],
+      "effects": [
+        "vercel"
+      ],
+      "range": "<=2.0.3 || >=5.2.4",
+      "nodes": [
+        "node_modules/@vercel/remix-builder"
+      ],
+      "fixAvailable": {
+        "name": "vercel",
+        "version": "25.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@vercel/static-build": {
+      "name": "@vercel/static-build",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "@vercel/gatsby-plugin-vercel-builder"
+      ],
+      "effects": [
+        "vercel"
+      ],
+      "range": ">=1.3.0",
+      "nodes": [
+        "node_modules/@vercel/static-build"
+      ],
+      "fixAvailable": {
+        "name": "vercel",
+        "version": "25.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "app-store-scraper": {
+      "name": "app-store-scraper",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "request"
+      ],
+      "effects": [],
+      "range": ">=0.5.0",
+      "nodes": [
+        "node_modules/app-store-scraper"
+      ],
+      "fixAvailable": {
+        "name": "app-store-scraper",
+        "version": "0.4.0",
+        "isSemVerMajor": true
+      }
+    },
+    "esbuild": {
+      "name": "esbuild",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1102341,
+          "name": "esbuild",
+          "dependency": "esbuild",
+          "title": "esbuild enables any website to send any requests to the development server and read the response",
+          "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-346"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+          },
+          "range": "<=0.24.2"
+        }
+      ],
+      "effects": [
+        "@vercel/gatsby-plugin-vercel-builder",
+        "@vercel/node",
+        "vite"
+      ],
+      "range": "<=0.24.2",
+      "nodes": [
+        "node_modules/@vercel/gatsby-plugin-vercel-builder/node_modules/esbuild",
+        "node_modules/@vercel/node/node_modules/esbuild",
+        "node_modules/vercel/node_modules/esbuild",
+        "node_modules/vite/node_modules/esbuild"
+      ],
+      "fixAvailable": {
+        "name": "@vercel/node",
+        "version": "2.3.0",
+        "isSemVerMajor": true
+      }
+    },
+    "path-to-regexp": {
+      "name": "path-to-regexp",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1101846,
+          "name": "path-to-regexp",
+          "dependency": "path-to-regexp",
+          "title": "path-to-regexp outputs backtracking regular expressions",
+          "url": "https://github.com/advisories/GHSA-9wv6-86v2-598j",
+          "severity": "high",
+          "cwe": [
+            "CWE-1333"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=4.0.0 <6.3.0"
+        },
+        {
+          "source": 1101847,
+          "name": "path-to-regexp",
+          "dependency": "path-to-regexp",
+          "title": "path-to-regexp outputs backtracking regular expressions",
+          "url": "https://github.com/advisories/GHSA-9wv6-86v2-598j",
+          "severity": "high",
+          "cwe": [
+            "CWE-1333"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": ">=7.0.0 <8.0.0"
+        }
+      ],
+      "effects": [
+        "@vercel/node",
+        "@vercel/remix-builder"
+      ],
+      "range": "4.0.0 - 6.2.2 || 7.0.0 - 7.2.0",
+      "nodes": [
+        "node_modules/@vercel/node/node_modules/path-to-regexp",
+        "node_modules/@vercel/remix-builder/node_modules/path-to-regexp",
+        "node_modules/path-to-regexp",
+        "node_modules/vercel/node_modules/path-to-regexp"
+      ],
+      "fixAvailable": {
+        "name": "path-to-regexp",
+        "version": "8.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "request": {
+      "name": "request",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1096727,
+          "name": "request",
+          "dependency": "request",
+          "title": "Server-Side Request Forgery in Request",
+          "url": "https://github.com/advisories/GHSA-p8p7-x288-28g6",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-918"
+          ],
+          "cvss": {
+            "score": 6.1,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+          },
+          "range": "<=2.88.2"
+        },
+        "tough-cookie"
+      ],
+      "effects": [
+        "app-store-scraper"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/request"
+      ],
+      "fixAvailable": {
+        "name": "app-store-scraper",
+        "version": "0.4.0",
+        "isSemVerMajor": true
+      }
+    },
+    "tough-cookie": {
+      "name": "tough-cookie",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1097682,
+          "name": "tough-cookie",
+          "dependency": "tough-cookie",
+          "title": "tough-cookie Prototype Pollution vulnerability",
+          "url": "https://github.com/advisories/GHSA-72xf-g2v4-qvf3",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-1321"
+          ],
+          "cvss": {
+            "score": 6.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+          },
+          "range": "<4.1.3"
+        }
+      ],
+      "effects": [
+        "request"
+      ],
+      "range": "<4.1.3",
+      "nodes": [
+        "node_modules/tough-cookie"
+      ],
+      "fixAvailable": {
+        "name": "app-store-scraper",
+        "version": "0.4.0",
+        "isSemVerMajor": true
+      }
+    },
+    "undici": {
+      "name": "undici",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1101610,
+          "name": "undici",
+          "dependency": "undici",
+          "title": "Use of Insufficiently Random Values in undici",
+          "url": "https://github.com/advisories/GHSA-c76h-2ccp-4975",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-330"
+          ],
+          "cvss": {
+            "score": 6.8,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N"
+          },
+          "range": ">=4.5.0 <5.28.5"
+        },
+        {
+          "source": 1104501,
+          "name": "undici",
+          "dependency": "undici",
+          "title": "undici Denial of Service attack via bad certificate data",
+          "url": "https://github.com/advisories/GHSA-cxrh-j4jr-qwg3",
+          "severity": "low",
+          "cwe": [
+            "CWE-401"
+          ],
+          "cvss": {
+            "score": 3.1,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": "<5.29.0"
+        }
+      ],
+      "effects": [
+        "@vercel/node"
+      ],
+      "range": "<=5.28.5",
+      "nodes": [
+        "node_modules/undici"
+      ],
+      "fixAvailable": {
+        "name": "@vercel/node",
+        "version": "2.3.0",
+        "isSemVerMajor": true
+      }
+    },
+    "vercel": {
+      "name": "vercel",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "@vercel/node",
+        "@vercel/remix-builder",
+        "@vercel/static-build"
+      ],
+      "effects": [],
+      "range": ">=25.2.1",
+      "nodes": [
+        "node_modules/vercel"
+      ],
+      "fixAvailable": {
+        "name": "vercel",
+        "version": "25.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "vite": {
+      "name": "vite",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "esbuild"
+      ],
+      "effects": [],
+      "range": "0.11.0 - 6.1.6",
+      "nodes": [
+        "node_modules/vite"
+      ],
+      "fixAvailable": {
+        "name": "vite",
+        "version": "6.3.5",
+        "isSemVerMajor": true
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 8,
+      "high": 4,
+      "critical": 0,
+      "total": 12
+    },
+    "dependencies": {
+      "prod": 374,
+      "dev": 382,
+      "optional": 90,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 757
+    }
+  }
+}

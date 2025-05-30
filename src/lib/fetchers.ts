@@ -5,7 +5,10 @@ export interface RankApiResponse {
 
 export interface RankData {
   financeRank: number | null;
-  overallRank: number | null;
+  overallRank: number | string | null;  // Can be number or '100+'
+  source?: string;
+  scraperReason?: string;
+  stale?: boolean;
 }
 
 export const coinbaseRankFetcher = async (
