@@ -1,6 +1,7 @@
 // api/coinbaseRank.js
 
 import { scrapeCoinbaseRanks } from '../lib/coinbaseScraper.js';
+import { createServerSupabaseClient } from '../lib/supabaseServer.js';
 
 // Constants for identifying the Coinbase app
 const COINBASE_APPLE_ID  = 886427730
@@ -11,6 +12,9 @@ let cachedData = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export default async function handler(req, res) {
+  // Initialize Supabase client
+  const supabase = createServerSupabaseClient();
+  
   // Check if we have recent cached data (helps in dev with hot reloads)
   if (cachedData && lastFetchTime && (Date.now() - lastFetchTime < CACHE_DURATION)) {
     console.log('[CoinbaseRank] Serving from memory cache');
@@ -155,18 +159,71 @@ export default async function handler(req, res) {
 
   console.log(`[CoinbaseRank] Final ranks - Finance: ${financeRank}, Overall: ${overallRank}, Source: ${dataSource}`);
 
-  // Store in cache
+  // 4) SUPABASE PERSISTENCE
+  let prevFinanceRank = null;
+  let prevOverallRank = null;
+
+  if (supabase) {
+    try {
+      // Look up the previous row
+      const { data: prevRows, error: selectError } = await supabase
+        .from('coinbase_app_rank')
+        .select('finance_rank, overall_rank')
+        .order('recorded_at', { ascending: false })
+        .limit(1);
+
+      if (selectError) {
+        console.error('[CoinbaseRank] Error fetching previous rank:', selectError);
+      } else if (prevRows && prevRows.length > 0) {
+        const prev = prevRows[0];
+        prevFinanceRank = prev.finance_rank;
+        prevOverallRank = prev.overall_rank;
+        console.log(`[CoinbaseRank] Previous ranks - Finance: ${prevFinanceRank}, Overall: ${prevOverallRank}`);
+      }
+
+      // Insert the new snapshot (fire and forget)
+      // Convert '100+' or other string values to null for DB storage
+      const overallRankForDb = typeof overallRank === 'number' ? overallRank : null;
+      
+      const { error: insertError } = await supabase
+        .from('coinbase_app_rank')
+        .insert({
+          finance_rank: financeRank,
+          overall_rank: overallRankForDb,
+          source: dataSource,
+          scraper_reason: scraperReason || null
+        });
+
+      if (insertError) {
+        console.error('[CoinbaseRank] Error inserting new rank:', insertError);
+      } else {
+        console.log('[CoinbaseRank] Successfully inserted new rank snapshot');
+      }
+    } catch (dbError) {
+      console.error('[CoinbaseRank] Database operation error:', dbError);
+    }
+  }
+
+  // Build response
   const result = { 
     financeRank, 
     overallRank,
+    prevFinanceRank,
+    prevOverallRank,
     source: dataSource,  // For debugging only
     ...(scraperReason ? { scraperReason } : {})  // Include reason if scraper was used
   };
   
-  cachedData = { financeRank, overallRank }; // Cache without debug fields
+  // Cache without debug fields
+  cachedData = { 
+    financeRank, 
+    overallRank,
+    prevFinanceRank,
+    prevOverallRank
+  };
   lastFetchTime = Date.now();
 
-  // 4) Send response + aggressive cache headers
+  // 5) Send response + aggressive cache headers
   // 5 min fresh, 24 hours stale-while-revalidate
   res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400')
   return res.status(200).json(result)

@@ -1,27 +1,58 @@
-export interface RankApiResponse {
-  financeRank: number | null;
-  overallRank: number | null;
-}
+// src/lib/fetchers.ts
+// SWR fetcher functions with proper named exports
 
+// Type definitions for Coinbase rank data
 export interface RankData {
-  financeRank: number | null;
-  overallRank: number | string | null;  // Can be number or '100+'
+  currentRank: number;
+  previousRank?: number;
+  category: string;
+  appName: string;
+  lastUpdated: string;
+  trend?: 'improving' | 'declining' | 'stable';
   source?: string;
-  scraperReason?: string;
-  stale?: boolean;
 }
 
-export const coinbaseRankFetcher = async (
-  url: string
-): Promise<RankData> => {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+// Main fetcher for SWR
+export const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    const error = new Error('An error occurred while fetching the data.');
+    // Attach extra info to the error object
+    (error as any).info = await response.json();
+    (error as any).status = response.status;
+    throw error;
   }
-  const data: RankApiResponse = await res.json();
-  // Simply pass through the values without converting null to 999
-  return { 
-    financeRank: data.financeRank,
-    overallRank: data.overallRank
-  };
+  
+  return response.json();
 };
+
+// Specialized fetchers (all use the same logic for now)
+export const coinbaseRankFetcher = fetcher;
+export const btcIndicatorsFetcher = fetcher;
+export const piCycleFetcher = fetcher;
+
+// Alternative fetcher with auth headers if needed
+export const fetcherWithAuth = async (url: string, token?: string) => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(url, { headers });
+  
+  if (!response.ok) {
+    const error = new Error('An error occurred while fetching the data.');
+    (error as any).info = await response.json();
+    (error as any).status = response.status;
+    throw error;
+  }
+  
+  return response.json();
+};
+
+// Default export as well for flexibility
+export default fetcher;

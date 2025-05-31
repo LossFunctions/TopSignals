@@ -1,3 +1,5 @@
+// src/components/SignalsGrid.tsx
+import { FourYearCycleCard } from './FourYearCycleCard';
 import SignalCard from '@/components/SignalCard';
 import { PiCycleCard } from '@/components/PiCycleCard';
 import { MonthlyRsiCard } from '@/components/MonthlyRsiCard';
@@ -33,6 +35,7 @@ export function SignalsGrid() {
     { id: 'pi-cycle', component: <PiCycleCard /> },
     { id: 'monthly-rsi', component: <MonthlyRsiCard /> },
     { id: 'weekly-ema', component: <WeeklyEmaCard /> },
+    { id: 'four-year-cycle', component: <FourYearCycleCard /> },
     // Add more custom indicators here in the future:
     // { id: 'fear-greed', component: <FearGreedCard /> },
   ];

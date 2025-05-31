@@ -84,36 +84,32 @@ export function WeeklyEmaCard() {
 
           {/* EMA 50 Status */}
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">50 Week EMA</span>
-                {breakEma50 !== null && (
-                  <Badge variant={breakEma50 ? 'destructive' : 'default'} className="text-xs">
-                    {breakEma50 ? 'Below' : 'Above'}
-                  </Badge>
-                )}
-              </div>
-              <span className="text-sm text-muted-foreground font-mono">
-                ${ema50 != null ? ema50.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">50 Week EMA</span>
+              {breakEma50 !== null && (
+                <Badge variant={breakEma50 ? 'destructive' : 'default'} className="text-xs">
+                  {breakEma50 ? 'Below' : 'Above'}
+                </Badge>
+              )}
             </div>
+            <span className="text-sm text-muted-foreground font-mono">
+              ${ema50 != null ? ema50.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
+            </span>
           </div>
 
           {/* EMA 200 Status */}
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">200 Week EMA</span>
-                {breakEma200 !== null && (
-                  <Badge variant={breakEma200 ? 'destructive' : 'default'} className="text-xs">
-                    {breakEma200 ? 'Below' : 'Above'}
-                  </Badge>
-                )}
-              </div>
-              <span className="text-sm text-muted-foreground font-mono">
-                ${ema200 != null ? ema200.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">200 Week EMA</span>
+              {breakEma200 !== null && (
+                <Badge variant={breakEma200 ? 'destructive' : 'default'} className="text-xs">
+                  {breakEma200 ? 'Below' : 'Above'}
+                </Badge>
+              )}
             </div>
+            <span className="text-sm text-muted-foreground font-mono">
+              ${ema200 != null ? ema200.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
+            </span>
           </div>
 
           {/* Break Alert */}
