@@ -35,9 +35,14 @@ interface UseBTCHistoryReturn {
   dataRange: { start: Date; end: Date } | null;
 }
 
-export function useBTCHistory(): UseBTCHistoryReturn {
+export function useBTCHistory(minDate?: string): UseBTCHistoryReturn {
+  // Build URL with optional minDate parameter
+  const url = minDate 
+    ? `/api/btcHistory?from=${minDate}`
+    : '/api/btcHistory';
+
   const { data, error, isLoading, mutate } = useSWR<BTCHistoryData>(
-    '/api/btcHistory',
+    url,
     fetcher,
     {
       refreshInterval: 3600000, // Refresh every hour
@@ -59,6 +64,9 @@ export function useBTCHistory(): UseBTCHistoryReturn {
           }
           if (data.isLimitedData) {
             console.log('Note: Using limited data range');
+          }
+          if (minDate) {
+            console.log(`Data filtered from: ${minDate}`);
           }
         }
       }
@@ -90,8 +98,13 @@ export function useBTCHistory(): UseBTCHistoryReturn {
 }
 
 // Helper hook for manually refreshing the data
-export function useBTCHistoryRefresh() {
-  const { mutate } = useSWR<BTCHistoryData>('/api/btcHistory');
+export function useBTCHistoryRefresh(minDate?: string) {
+  // Build URL with optional minDate parameter
+  const url = minDate 
+    ? `/api/btcHistory?from=${minDate}`
+    : '/api/btcHistory';
+    
+  const { mutate } = useSWR<BTCHistoryData>(url);
   
   const refresh = async () => {
     try {

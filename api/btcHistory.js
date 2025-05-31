@@ -7,8 +7,15 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   
+  // Get the 'from' parameter for date filtering
+  const fromParam = req.query.from;
+  const fromDate = fromParam ? new Date(fromParam) : null;
+  
   try {
     console.log('Starting BTC history fetch...');
+    if (fromDate) {
+      console.log(`Filtering data from: ${fromDate.toISOString()}`);
+    }
     
     // STEP 1: Fetch all available Binance data
     const binancePrices = await fetchBinanceData();
@@ -60,6 +67,14 @@ export default async function handler(req, res) {
       }
     }
     
+    // Apply date filtering if 'from' parameter is provided
+    if (fromDate && fromDate.getTime() > 0) {
+      const fromTime = fromDate.getTime();
+      const beforeFilter = finalPrices.length;
+      finalPrices = finalPrices.filter(price => price.time >= fromTime);
+      console.log(`Date filter applied: ${beforeFilter} → ${finalPrices.length} candles`);
+    }
+    
     // Final validation and logging
     if (finalPrices.length > 0) {
       const startDate = new Date(finalPrices[0].time).toISOString();
@@ -67,8 +82,11 @@ export default async function handler(req, res) {
       console.log(`Final dataset: ${finalPrices.length} candles from ${startDate} to ${endDate}`);
     }
     
-    // Cache for 24 hours (daily candles only change once per day)
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600');
+    // Adjust cache based on whether we're filtering
+    const cacheControl = fromDate 
+      ? 's-maxage=86400, stale-while-revalidate=3600' 
+      : 's-maxage=86400, stale-while-revalidate=3600';
+    res.setHeader('Cache-Control', cacheControl);
     
     return res.status(200).json({ 
       prices: finalPrices,
@@ -89,7 +107,13 @@ export default async function handler(req, res) {
     try {
       console.log('Falling back to CoinGecko OHLC API (limited to 365 days)...');
       
-      const prices = await fetchCoinGeckoOHLC();
+      let prices = await fetchCoinGeckoOHLC();
+      
+      // Apply date filtering in fallback mode too
+      if (fromDate && fromDate.getTime() > 0) {
+        const fromTime = fromDate.getTime();
+        prices = prices.filter(price => price.time >= fromTime);
+      }
       
       console.log(`Fallback successful: ${prices.length} candles from CoinGecko`);
       
