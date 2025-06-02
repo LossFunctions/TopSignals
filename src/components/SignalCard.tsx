@@ -1,11 +1,22 @@
-// src/components/SignalCard.tsx
+// ===== 2. src/components/SignalCard.tsx =====
 
 import React from 'react';
 import useSWR from 'swr';
-import { coinbaseRankFetcher, RankData } from '@/lib/fetchers';
+import { coinbaseRankFetcher } from '@/lib/fetchers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+
+// Extended RankData interface with all necessary fields
+export interface RankData {
+  rank: number | null;
+  financeRank?: number | null;
+  overallRank?: number | null;
+  prevFinanceRank?: number | null;
+  prevOverallRank?: number | null;
+  lastUpdated: string;
+  cached?: boolean;
+}
 
 interface SignalCardProps {
   signalName: string;
@@ -53,8 +64,8 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
   const prevOverallRank = data?.prevOverallRank;
 
   // Helper function to render rank change indicator
-  const renderRankChange = (current: number | null, previous: number | null | undefined) => {
-    if (current === null || previous === null || previous === undefined) return null;
+  const renderRankChange = (current: number | null | undefined, previous: number | null | undefined) => {
+    if (current === null || current === undefined || previous === null || previous === undefined) return null;
     
     const change = previous - current; // Lower rank number is better
     if (change > 0) {

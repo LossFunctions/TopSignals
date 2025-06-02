@@ -1,4 +1,4 @@
-// src/hooks/useBTCHistory.ts
+// ===== 5. src/hooks/useBTCHistory.ts =====
 // Enhanced hook for fetching BTC price history data with better error handling
 
 import useSWR from 'swr';
@@ -41,7 +41,7 @@ export function useBTCHistory(minDate?: string): UseBTCHistoryReturn {
     ? `/api/btcHistory?from=${minDate}`
     : '/api/btcHistory';
 
-  const { data, error, isLoading, mutate } = useSWR<BTCHistoryData>(
+  const { data, error, isLoading } = useSWR<BTCHistoryData>(
     url,
     fetcher,
     {
@@ -79,8 +79,8 @@ export function useBTCHistory(minDate?: string): UseBTCHistoryReturn {
                        data?.source === 'coingecko_fallback' || 
                        (data?.note?.includes('Limited') ?? false);
 
-  // Calculate the actual data range
-  const dataRange = data?.prices?.length > 0 
+  // Calculate the actual data range with proper guards
+  const dataRange = data?.prices && data.prices.length > 0 
     ? {
         start: new Date(Math.min(...data.prices.map(p => p.time))),
         end: new Date(Math.max(...data.prices.map(p => p.time)))

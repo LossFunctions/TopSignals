@@ -1,8 +1,9 @@
 // src/lib/fetchers.ts
 // SWR fetcher functions with proper named exports
 
-// Type definitions for Coinbase rank data
+// Type definitions for Coinbase rank data - extended to include all necessary fields
 export interface RankData {
+  // Original fields
   currentRank: number;
   previousRank?: number;
   category: string;
@@ -10,6 +11,14 @@ export interface RankData {
   lastUpdated: string;
   trend?: 'improving' | 'declining' | 'stable';
   source?: string;
+  
+  // Additional fields for SignalCard compatibility
+  rank: number | null;
+  financeRank?: number | null;
+  overallRank?: number | null;
+  prevFinanceRank?: number | null;
+  prevOverallRank?: number | null;
+  cached?: boolean;
 }
 
 // Main fetcher for SWR
