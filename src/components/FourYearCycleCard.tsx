@@ -25,15 +25,16 @@ import { format } from 'date-fns';
 import { projectedEvents, generateCycleSpans, getCycleMarkers } from '../data/btcCycleEvents';
 import { useBTCHistory } from '../hooks/useBTCHistory';
 
+// Constants for X-axis domain control
+const EXTRA_DAYS_AFTER_PROJECTION = 30; // change to grow/shrink padding
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 // Custom label component for projected top
 const ProjectedTopLabel = ({ viewBox }: any) => {
   const { x, y } = viewBox;
   return (
     <g>
-      <text x={x} y={y - 10} fill="#ef4444" fontSize={14} fontWeight={600} textAnchor="middle">
-        ▼
-      </text>
-      <text x={x} y={y - 22} fill="#ef4444" fontSize={12} fontWeight={600} fontStyle="italic" textAnchor="middle">
+      <text x={x} y={y - 30} fill="#ef4444" fontSize={12} fontWeight={600} fontStyle="italic" textAnchor="middle">
         Projected Top
       </text>
     </g>
@@ -46,10 +47,10 @@ const BottomDateLabel = ({ viewBox, date, label, isSmall }: any) => {
   const fontSize = isSmall ? 8 : 9;
   return (
     <g>
-      <text x={x} y={y + 30} fill="#d4d4d8" fontSize={fontSize} fontWeight={500} textAnchor="middle">
+      <text x={x} y={y - 17} fill="#d4d4d8" fontSize={fontSize} fontWeight={500} textAnchor="middle">
         {date}
       </text>
-      <text x={x} y={y + 42} fill="#d4d4d8" fontSize={fontSize} fontWeight={500} textAnchor="middle">
+      <text x={x} y={y - 5} fill="#d4d4d8" fontSize={fontSize} fontWeight={500} textAnchor="middle">
         {label}
       </text>
     </g>
@@ -109,37 +110,48 @@ export function FourYearCycleCard() {
     // Create a map for fast lookup
     const dataMap = new Map(baseData.map(d => [d.date, d.price]));
 
-    // Add virtual points for each marker
-    cycleMarkers.forEach(marker => {
-      const timestamp = marker.timestamp;
-      
-      // Skip if we already have data for this date
-      if (dataMap.has(timestamp)) return;
-      
-      // Find the closest date in our data
-      let closestPrice = 0;
-      let minDiff = Infinity;
-      
-      baseData.forEach(d => {
-        const diff = Math.abs(d.date - timestamp);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestPrice = d.price;
+    // Add virtual points for each historical marker only (exclude projected events)
+    cycleMarkers
+      .filter(marker => !marker.isProjectedTop) // Only add virtual points for historical events
+      .forEach(marker => {
+        const timestamp = marker.timestamp;
+        
+        // Skip if we already have data for this date
+        if (dataMap.has(timestamp)) return;
+        
+        // Find the closest date in our data
+        let closestPrice = 0;
+        let minDiff = Infinity;
+        
+        baseData.forEach(d => {
+          const diff = Math.abs(d.date - timestamp);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestPrice = d.price;
+          }
+        });
+        
+        if (closestPrice > 0) {
+          baseData.push({
+            date: timestamp,
+            price: closestPrice,
+            isVirtual: true
+          });
         }
       });
-      
-      if (closestPrice > 0) {
-        baseData.push({
-          date: timestamp,
-          price: closestPrice,
-          isVirtual: true
-        });
-      }
-    });
 
     // Sort by date
     return baseData.sort((a, b) => a.date - b.date);
   }, [btcData, cycleMarkers]);
+
+  // Calculate min/max timestamps for domain
+  const minTimestamp = useMemo(() => {
+    if (chartData.length === 0) return new Date('2013-11-01').getTime();
+    return Math.min(...chartData.map(d => d.date));
+  }, [chartData]);
+
+  const projectedTopTs = new Date('2025-10-18').getTime();
+  const maxTimestamp = projectedTopTs + EXTRA_DAYS_AFTER_PROJECTION * MS_PER_DAY;
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -326,9 +338,10 @@ export function FourYearCycleCard() {
                 dataKey="date"
                 type="number"
                 scale="time"
-                domain={[new Date('2013-11-01').getTime(), new Date('2027-12-31').getTime()]}
+                domain={[minTimestamp, maxTimestamp]}
                 tickFormatter={formatXAxisTick}
                 stroke="#71717a"
+                padding={{ left: 0, right: 0 }}
                 ticks={[
                   new Date('2014-01-01').getTime(),
                   new Date('2016-01-01').getTime(),
@@ -385,21 +398,31 @@ export function FourYearCycleCard() {
               {/* Cycle-duration labels */}
               {!isSmallScreen && cycleSpans
                 .filter(s => s.durationLabel)
-                .map((s, i) => (
-                  <ReferenceLine
-                    key={`dur-${i}`}
-                    x={s.midpoint}
-                    stroke="transparent"
-                    label={{
-                      value: s.durationLabel,
-                      position: 'insideTop' as const,
-                      dy: s.labelYOffset,
-                      fill: '#a1a1aa',
-                      fontSize: isMediumScreen ? 8 : 9,
-                      style: { fontStyle: 'italic' }
-                    }}
-                  />
-                ))}
+                .map((s, i) => {
+                  // Check if this is a bear cycle label
+                  const isBearCycle = s.durationLabel && s.durationLabel.includes('bear cycle');
+                  
+                  // For bear cycles, replace " – bear cycle" with " bear"
+                  const labelValue = isBearCycle 
+                    ? s.durationLabel.replace(' – bear cycle', ' bear')
+                    : s.durationLabel;
+                  
+                  return (
+                    <ReferenceLine
+                      key={`dur-${i}`}
+                      x={s.midpoint}
+                      stroke="transparent"
+                      label={{
+                        value: labelValue,
+                        position: 'insideTop' as const,
+                        dy: isBearCycle ? s.labelYOffset + 329 : s.labelYOffset, // Adjust position for bear cycles
+                        fill: '#a1a1aa',
+                        fontSize: isBearCycle ? 9.2 : (isMediumScreen ? 8 : 9), // Bigger font for bear cycles
+                        style: { fontStyle: 'italic' }
+                      }}
+                    />
+                  );
+                })}
               
               {/* Top and bottom marker glyphs (in-chart) */}
               {cycleMarkers.map((marker) => (
@@ -411,7 +434,7 @@ export function FourYearCycleCard() {
                     <Label
                       value={marker.type === 'top' ? '▼' : '▲'}
                       position="top"
-                      offset={-5}
+                      offset={-8}
                       fill={marker.type === 'top' ? '#ef4444' : '#10b981'}
                       fontSize={12}
                       fontWeight={600}
@@ -451,22 +474,7 @@ export function FourYearCycleCard() {
                 />
               ))}
               
-              {/* Projected top date label - only on larger screens */}
-              {!isMediumScreen && (
-                <ReferenceLine
-                  x={new Date('2025-11-28').getTime()}
-                  stroke="transparent"
-                  label={
-                    <BottomDateLabel 
-                      date="Nov-28-2025"
-                      label="Top"
-                      isSmall={isSmallScreen}
-                    />
-                  }
-                />
-              )}
-              
-              {/* Price line - render last */}
+              {/* Price line */}
               <Line
                 type="monotone"
                 dataKey="price"
@@ -478,6 +486,21 @@ export function FourYearCycleCard() {
                 isAnimationActive={false}
                 connectNulls={true}
               />
+              
+              {/* Projected top date label - only on larger screens - MOVED AFTER PRICE LINE */}
+              {!isMediumScreen && (
+                <ReferenceLine
+                  x={new Date('2025-10-18').getTime()}
+                  stroke="transparent"
+                  label={
+                    <BottomDateLabel 
+                      date="Oct-18-2025"
+                      label="Top"
+                      isSmall={isSmallScreen}
+                    />
+                  }
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>

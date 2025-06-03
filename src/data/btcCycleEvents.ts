@@ -15,7 +15,7 @@ export const halvingEvents: any[] = [];
 
 // Projected events
 export const projectedEvents = [
-  { date: '2025-11-28', type: 'top', label: 'Projected Top' },
+  { date: '2025-10-18', type: 'top', label: 'Projected Top' },
 ];
 
 // Historical cycle data with precise dates
@@ -43,8 +43,8 @@ const historicalCycles = [
 // Current/Projected cycle
 const currentCycle = {
   bottomDate: '2022-11-09',
-  topDate: '2025-11-28',
-  nextBottomDate: '2026-10-29',
+  topDate: '2025-10-18',
+  nextBottomDate: '2026-09-18',
   label: '2025 CYCLE',
   isProjected: true,
   isCurrent: true

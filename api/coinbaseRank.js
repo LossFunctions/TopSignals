@@ -159,48 +159,79 @@ export default async function handler(req, res) {
 
   console.log(`[CoinbaseRank] Final ranks - Finance: ${financeRank}, Overall: ${overallRank}, Source: ${dataSource}`);
 
-  // 4) SUPABASE PERSISTENCE
+  // 4) SUPABASE PERSISTENCE WITH STICKY PREVIOUS LOGIC
   let prevFinanceRank = null;
   let prevOverallRank = null;
+  let direction = 'none';
 
-  if (supabase) {
+  if (supabase && financeRank !== null) {
     try {
-      // Look up the previous row
+      // ─── fetch the most recent stored row ───────────────────────────────────────
+      const { data: [lastRow] = [] } = await supabase
+        .from('coinbase_rank_history')
+        .select('finance_rank')
+        .order('fetched_at', { ascending: false })
+        .limit(1);
+      
+      const lastStoredRank = lastRow?.finance_rank ?? null;
+      
+      // ─── determine previousDifferentRank before maybe inserting ────────────────
+      if (lastStoredRank !== null) {
+        if (financeRank !== lastStoredRank) {
+          // Rank changed - use last stored rank as previous
+          prevFinanceRank = lastStoredRank;
+        } else {
+          // Rank unchanged - pull the *last* different value (if any)
+          const { data: [altRow] = [] } = await supabase
+            .from('coinbase_rank_history')
+            .select('finance_rank')
+            .neq('finance_rank', financeRank)
+            .order('fetched_at', { ascending: false })
+            .limit(1);
+          
+          prevFinanceRank = altRow?.finance_rank ?? null;
+        }
+      }
+      
+      // ─── if the rank truly changed → insert a new row ──────────────────────────
+      if (financeRank !== lastStoredRank) {
+        await supabase
+          .from('coinbase_rank_history')
+          .insert({ finance_rank: financeRank });
+        
+        console.log(`[CoinbaseRank] Inserted new finance rank: ${financeRank} (previous: ${lastStoredRank})`);
+      } else {
+        console.log(`[CoinbaseRank] Finance rank unchanged at ${financeRank}, not inserting new record`);
+      }
+      
+      // ─── arrow direction helper ────────────────────────────────────────────────
+      direction = 
+        prevFinanceRank === null ? 'none' :
+        financeRank < prevFinanceRank ? 'up' :  // Lower rank number is better
+        financeRank > prevFinanceRank ? 'down' :
+        'none';
+      
+      console.log(`[CoinbaseRank] Direction: ${direction}, Current: ${financeRank}, Previous: ${prevFinanceRank}`);
+    } catch (dbError) {
+      console.error('[CoinbaseRank] Database operation error:', dbError);
+    }
+  }
+
+  // For overall rank, keep existing logic (not implementing sticky previous yet)
+  if (supabase && overallRank !== null) {
+    try {
+      // Look up the previous overall rank
       const { data: prevRows, error: selectError } = await supabase
         .from('coinbase_app_rank')
-        .select('finance_rank, overall_rank')
+        .select('overall_rank')
         .order('recorded_at', { ascending: false })
         .limit(1);
 
-      if (selectError) {
-        console.error('[CoinbaseRank] Error fetching previous rank:', selectError);
-      } else if (prevRows && prevRows.length > 0) {
-        const prev = prevRows[0];
-        prevFinanceRank = prev.finance_rank;
-        prevOverallRank = prev.overall_rank;
-        console.log(`[CoinbaseRank] Previous ranks - Finance: ${prevFinanceRank}, Overall: ${prevOverallRank}`);
-      }
-
-      // Insert the new snapshot (fire and forget)
-      // Convert '100+' or other string values to null for DB storage
-      const overallRankForDb = typeof overallRank === 'number' ? overallRank : null;
-      
-      const { error: insertError } = await supabase
-        .from('coinbase_app_rank')
-        .insert({
-          finance_rank: financeRank,
-          overall_rank: overallRankForDb,
-          source: dataSource,
-          scraper_reason: scraperReason || null
-        });
-
-      if (insertError) {
-        console.error('[CoinbaseRank] Error inserting new rank:', insertError);
-      } else {
-        console.log('[CoinbaseRank] Successfully inserted new rank snapshot');
+      if (!selectError && prevRows && prevRows.length > 0) {
+        prevOverallRank = prevRows[0].overall_rank;
       }
     } catch (dbError) {
-      console.error('[CoinbaseRank] Database operation error:', dbError);
+      console.error('[CoinbaseRank] Error fetching previous overall rank:', dbError);
     }
   }
 
@@ -210,6 +241,7 @@ export default async function handler(req, res) {
     overallRank,
     prevFinanceRank,
     prevOverallRank,
+    direction,
     source: dataSource,  // For debugging only
     ...(scraperReason ? { scraperReason } : {})  // Include reason if scraper was used
   };
@@ -219,7 +251,8 @@ export default async function handler(req, res) {
     financeRank, 
     overallRank,
     prevFinanceRank,
-    prevOverallRank
+    prevOverallRank,
+    direction
   };
   lastFetchTime = Date.now();
 

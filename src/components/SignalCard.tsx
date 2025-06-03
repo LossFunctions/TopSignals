@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { coinbaseRankFetcher } from '@/lib/fetchers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertCircle, ArrowUp, ArrowDown, TrendingUp, TrendingDown } from 'lucide-react';
 
 // Extended RankData interface with all necessary fields
 export interface RankData {
@@ -14,6 +14,7 @@ export interface RankData {
   overallRank?: number | null;
   prevFinanceRank?: number | null;
   prevOverallRank?: number | null;
+  direction?: 'up' | 'down' | 'none';
   lastUpdated: string;
   cached?: boolean;
 }
@@ -62,9 +63,10 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
   const overallRank = data?.overallRank;
   const prevFinanceRank = data?.prevFinanceRank;
   const prevOverallRank = data?.prevOverallRank;
+  const direction = data?.direction || 'none';
 
-  // Helper function to render rank change indicator
-  const renderRankChange = (current: number | null | undefined, previous: number | null | undefined) => {
+  // Helper function for overall rank change indicator (keeping original logic for overall rank)
+  const renderOverallRankChange = (current: number | null | undefined, previous: number | null | undefined) => {
     if (current === null || current === undefined || previous === null || previous === undefined) return null;
     
     const change = previous - current; // Lower rank number is better
@@ -99,11 +101,16 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
             <div className="text-2xl font-bold">
               {typeof financeRank === 'number' ? `#${financeRank}` : '—'}
             </div>
-            {renderRankChange(financeRank, prevFinanceRank)}
           </div>
-          {prevFinanceRank && (
+          {prevFinanceRank !== null && (
             <div className="text-sm text-muted-foreground mt-1">
-              Previous: #{prevFinanceRank}
+              Previous:&nbsp;
+              <span className={direction === 'up' ? 'text-green-500' : 
+                              direction === 'down' ? 'text-red-500' : ''}>
+                #{prevFinanceRank}
+              </span>
+              {direction === 'up' && <ArrowUp className="inline h-4 w-4 ml-1 text-green-500" />}
+              {direction === 'down' && <ArrowDown className="inline h-4 w-4 ml-1 text-red-500" />}
             </div>
           )}
         </div>
@@ -122,7 +129,7 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
                 </div>
               )}
             </div>
-            {typeof overallRank === 'number' && renderRankChange(overallRank, prevOverallRank)}
+            {typeof overallRank === 'number' && renderOverallRankChange(overallRank, prevOverallRank)}
           </div>
           {prevOverallRank && typeof overallRank === 'number' && (
             <div className="text-sm text-muted-foreground mt-1">

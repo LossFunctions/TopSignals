@@ -35,7 +35,7 @@ export function SignalsGrid() {
     { id: 'pi-cycle', component: <PiCycleCard /> },
     { id: 'monthly-rsi', component: <MonthlyRsiCard /> },
     { id: 'weekly-ema', component: <WeeklyEmaCard /> },
-    { id: 'four-year-cycle', component: <FourYearCycleCard />, span: 2 },
+    { id: 'four-year-cycle', component: <FourYearCycleCard />, span: 'full' },
     // Add more custom indicators here in the future:
     // { id: 'fear-greed', component: <FearGreedCard /> },
   ];
@@ -54,7 +54,7 @@ export function SignalsGrid() {
       
       {/* Custom indicator components */}
       {customIndicators.map(({ id, component, span = 1 }) => (
-        <div key={id} className={span === 2 ? 'sm:col-span-2' : ''}>
+        <div key={id} className={span === 'full' ? 'col-span-full' : (span === 2 ? 'sm:col-span-2' : '')}>
           {component}
         </div>
       ))}

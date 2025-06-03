@@ -18,7 +18,17 @@ export interface RankData {
   overallRank?: number | null;
   prevFinanceRank?: number | null;
   prevOverallRank?: number | null;
+  direction?: 'up' | 'down' | 'none';
   cached?: boolean;
+}
+
+// New interface specifically for the Coinbase rank API response
+export interface CoinbaseRankPayload {
+  financeRank: number;
+  prevFinanceRank: number | null;
+  direction: 'up' | 'down' | 'none';
+  overallRank: number | null;
+  prevOverallRank: number | null;
 }
 
 // Main fetcher for SWR
