@@ -3,9 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertCircle, TrendingUp, Info } from 'lucide-react';
-import { useBTCIndicators, MonthlyRsiData } from '@/hooks/useBTCIndicators';
+import { useBTCIndicators } from '@/hooks/useBTCIndicators';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
 
@@ -73,9 +72,6 @@ export function MonthlyRsiCard() {
   const cycleHighIsCurrentMonth = data?.cycleHighIsCurrentMonth || false;
   const historicalCycleHighs = data?.historicalCycleHighs || [];
   const status = data?.status || 'Normal';
-
-  // Calculate if current RSI is close to cycle high (within 5 points)
-  const isCloseToHigh = cycleHigh && rsiValue && (cycleHigh.value - rsiValue <= 5);
   
   // Check if current RSI equals cycle high (rounded to 0.1)
   const isAtCycleHigh = cycleHigh && rsiValue && 
@@ -226,7 +222,7 @@ export function MonthlyRsiCard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {historicalCycleHighs.map((peak, index) => {
+                        {historicalCycleHighs.map((peak, _index) => {
                           // Find the next bottom date after this peak
                           const cycleBottoms = [
                             { cycle: '2013', date: '2015-01-14' },
