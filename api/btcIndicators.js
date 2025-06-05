@@ -139,8 +139,8 @@ export default async function handler(req, res) {
       status = 'Warning';
     }
     
-    // Calculate cycle high (cycle started 2022-11-01)
-    const cycleStart = parseISO("2022-11-01");
+    // Calculate cycle high (cycle started 2022-11-21)
+    const cycleStart = parseISO("2022-11-21");
     const currentCycle = enriched.filter(m => parseISO(m.date) >= cycleStart && m.rsi !== null);
     
     let cycleHigh = null;

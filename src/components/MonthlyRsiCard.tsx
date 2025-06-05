@@ -227,7 +227,7 @@ export function MonthlyRsiCard() {
                           const cycleBottoms = [
                             { cycle: '2013', date: '2015-01-14' },
                             { cycle: '2017', date: '2018-12-15' },
-                            { cycle: '2021', date: '2022-11-09' }
+                            { cycle: '2021', date: '2022-11-21' }
                           ];
                           
                           const bottomDate = cycleBottoms.find(b => b.cycle === peak.cycle)?.date;

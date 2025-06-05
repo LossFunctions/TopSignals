@@ -150,7 +150,7 @@ export function FourYearCycleCard() {
     return Math.min(...chartData.map(d => d.date));
   }, [chartData]);
 
-  const projectedTopTs = new Date('2025-10-18').getTime();
+  const projectedTopTs = new Date('2025-10-18T12:00:00Z').getTime();
   const maxTimestamp = projectedTopTs + EXTRA_DAYS_AFTER_PROJECTION * MS_PER_DAY;
 
   // Custom tooltip
@@ -465,7 +465,7 @@ export function FourYearCycleCard() {
               {projectedEvents.map((event) => (
                 <ReferenceLine
                   key={event.date}
-                  x={new Date(event.date).getTime()}
+                  x={new Date(`${event.date}T12:00:00Z`).getTime()}
                   stroke="#ef4444"
                   strokeWidth={2}
                   strokeOpacity={0.6}
@@ -490,7 +490,7 @@ export function FourYearCycleCard() {
               {/* Projected top date label - only on larger screens - MOVED AFTER PRICE LINE */}
               {!isMediumScreen && (
                 <ReferenceLine
-                  x={new Date('2025-10-18').getTime()}
+                  x={new Date('2025-10-18T12:00:00Z').getTime()}
                   stroke="transparent"
                   label={
                     <BottomDateLabel 
