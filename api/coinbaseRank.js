@@ -169,13 +169,14 @@ export default async function handler(req, res) {
     try {
       // Insert current ranks into the snapshots table
       const insertResult = await supabase
-        .from('coinbase_app_rank_snapshots')
+        .from('coinbase_app_rank') // use existing history table
         .insert({
           finance_rank: financeRank,
           overall_rank: overallRank,
-          source: dataSource
+          source: dataSource,
+          scraper_reason: scraperReason || null
         })
-        .select('id, captured_at');
+        .select('id, recorded_at');
       
       if (insertResult.error) {
         console.error('[CoinbaseRank] Failed to insert rank snapshot:', insertResult.error);
@@ -186,9 +187,9 @@ export default async function handler(req, res) {
 
       // Query the most recent previous record
       const { data: prevData, error: prevError } = await supabase
-        .from('coinbase_app_rank_snapshots')
-        .select('finance_rank, overall_rank, captured_at')
-        .order('captured_at', { ascending: false })
+        .from('coinbase_app_rank')
+        .select('finance_rank, overall_rank, recorded_at')
+        .order('recorded_at', { ascending: false })
         .limit(2);  // Get current + previous (we'll use OFFSET 1 to get previous)
       
       if (prevError) {
@@ -207,7 +208,7 @@ export default async function handler(req, res) {
           deltaOverall = prevOverallRank - overallRank;
         }
         
-        console.log(`[CoinbaseRank] Previous ranks from ${prevData[1].captured_at}:`, 
+        console.log(`[CoinbaseRank] Previous ranks from ${prevData[1].recorded_at}:`, 
           `Finance: ${prevFinanceRank} (Δ${deltaFinance}), Overall: ${prevOverallRank} (Δ${deltaOverall})`);
       } else {
         console.log('[CoinbaseRank] No previous rank data found');
