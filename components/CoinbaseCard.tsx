@@ -47,28 +47,19 @@ export function CoinbaseCard() {
   const overallRank = data?.overallRank;
   const prevFinanceRank = data?.prevFinanceRank;
   const prevOverallRank = data?.prevOverallRank;
+  const deltaFinance = data?.deltaFinance;
+  const deltaOverall = data?.deltaOverall;
 
-  // Helper function to render rank change indicator
-  const renderRankChange = (current: number | null, previous: number | null | undefined) => {
-    if (current === null || previous === null || previous === undefined) return null;
+  // Utility function to format delta values with proper styling
+  const formatDelta = (delta?: number | null) => {
+    if (delta == null) return null;
     
-    const change = previous - current; // Lower rank number is better
-    if (change > 0) {
-      return (
-        <span className="text-green-600 text-sm ml-2 flex items-center">
-          <TrendingUp className="h-4 w-4 mr-1" />
-          {Math.abs(change)}
-        </span>
-      );
-    } else if (change < 0) {
-      return (
-        <span className="text-red-600 text-sm ml-2 flex items-center">
-          <TrendingDown className="h-4 w-4 mr-1" />
-          {Math.abs(change)}
-        </span>
-      );
-    }
-    return null;
+    const up = delta > 0; // Positive delta means rank improved (moved up the list)
+    return {
+      text: up ? `+${delta}` : `${delta}`,
+      icon: up ? '↑' : '↓',
+      color: up ? 'text-green-500' : 'text-red-500'
+    };
   };
 
   return (
@@ -84,11 +75,15 @@ export function CoinbaseCard() {
             <div className="text-2xl font-bold">
               {typeof financeRank === 'number' ? `#${financeRank}` : '—'}
             </div>
-            {renderRankChange(financeRank, prevFinanceRank)}
+            {deltaFinance != null && (
+              <span className={`text-sm ml-2 ${formatDelta(deltaFinance)?.color}`}>
+                {formatDelta(deltaFinance)?.icon} {formatDelta(deltaFinance)?.text}
+              </span>
+            )}
           </div>
           {prevFinanceRank && (
             <div className="text-sm text-muted-foreground mt-1">
-              Previous: #{prevFinanceRank}
+              Prev #{prevFinanceRank}
             </div>
           )}
         </div>
@@ -109,11 +104,15 @@ export function CoinbaseCard() {
                 '—'
               )}
             </div>
-            {typeof overallRank === 'number' && renderRankChange(overallRank, prevOverallRank)}
+            {typeof overallRank === 'number' && deltaOverall != null && (
+              <span className={`text-sm ml-2 ${formatDelta(deltaOverall)?.color}`}>
+                {formatDelta(deltaOverall)?.icon} {formatDelta(deltaOverall)?.text}
+              </span>
+            )}
           </div>
           {prevOverallRank && typeof overallRank === 'number' && (
             <div className="text-sm text-muted-foreground mt-1">
-              Previous: #{prevOverallRank}
+              Prev #{prevOverallRank}
             </div>
           )}
         </div>
