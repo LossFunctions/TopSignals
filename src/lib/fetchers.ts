@@ -1,28 +1,35 @@
 // src/lib/fetchers.ts
 // SWR fetcher functions with proper named exports
 
-// Type definitions for Coinbase rank data - extended to include all necessary fields
-export interface RankData {
-  // Original fields
-  currentRank: number;
-  previousRank?: number;
-  category: string;
-  appName: string;
-  lastUpdated: string;
-  trend?: 'improving' | 'declining' | 'stable';
+// Type definition for Coinbase rank API response
+export interface RankApiResponse {
+  financeRank: number | null;
+  overallRank: number | null;
+  prevFinanceRank: number | null;
+  prevOverallRank: number | null;
+  deltaFinance: number | null;
+  deltaOverall: number | null;
   source?: string;
+  stale?: boolean;
+}
+
+// Type definitions for Coinbase rank data - extended to include all necessary fields
+export interface RankData extends RankApiResponse {
+  // Original fields (kept for backward compatibility)
+  currentRank?: number;
+  previousRank?: number;
+  category?: string;
+  appName?: string;
+  lastUpdated?: string;
+  trend?: 'improving' | 'declining' | 'stable';
   
   // Additional fields for SignalCard compatibility
-  rank: number | null;
-  financeRank?: number | null;
-  overallRank?: number | null;
-  prevFinanceRank?: number | null;
-  prevOverallRank?: number | null;
+  rank?: number | null;
   direction?: 'up' | 'down' | 'none';
   cached?: boolean;
 }
 
-// New interface specifically for the Coinbase rank API response
+// Legacy interface (kept for backward compatibility)
 export interface CoinbaseRankPayload {
   financeRank: number;
   prevFinanceRank: number | null;

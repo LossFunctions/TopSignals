@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "crons": [
+    {
+      "path": "/api/coinbaseRank",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=300, stale-while-revalidate=86400"
+        }
+      ]
+    }
+  ],
+  "github": {
+    "silent": true
+  }
+}

@@ -159,100 +159,87 @@ export default async function handler(req, res) {
 
   console.log(`[CoinbaseRank] Final ranks - Finance: ${financeRank}, Overall: ${overallRank}, Source: ${dataSource}`);
 
-  // 4) SUPABASE PERSISTENCE WITH STICKY PREVIOUS LOGIC
+  // 4) SUPABASE PERSISTENCE WITH PREVIOUS RANKS AND DELTAS
   let prevFinanceRank = null;
   let prevOverallRank = null;
-  let direction = 'none';
+  let deltaFinance = null;
+  let deltaOverall = null;
 
-  if (supabase && financeRank !== null) {
+  if (supabase && (financeRank !== null || overallRank !== null)) {
     try {
-      // ─── fetch the most recent stored row ───────────────────────────────────────
-      const { data: [lastRow] = [] } = await supabase
-        .from('coinbase_rank_history')
-        .select('finance_rank')
-        .order('fetched_at', { ascending: false })
-        .limit(1);
+      // Insert current ranks into the snapshots table
+      const insertResult = await supabase
+        .from('coinbase_app_rank_snapshots')
+        .insert({
+          finance_rank: financeRank,
+          overall_rank: overallRank,
+          source: dataSource
+        })
+        .select('id, captured_at');
       
-      const lastStoredRank = lastRow?.finance_rank ?? null;
-      
-      // ─── determine previousDifferentRank before maybe inserting ────────────────
-      if (lastStoredRank !== null) {
-        if (financeRank !== lastStoredRank) {
-          // Rank changed - use last stored rank as previous
-          prevFinanceRank = lastStoredRank;
-        } else {
-          // Rank unchanged - pull the *last* different value (if any)
-          const { data: [altRow] = [] } = await supabase
-            .from('coinbase_rank_history')
-            .select('finance_rank')
-            .neq('finance_rank', financeRank)
-            .order('fetched_at', { ascending: false })
-            .limit(1);
-          
-          prevFinanceRank = altRow?.finance_rank ?? null;
-        }
-      }
-      
-      // ─── if the rank truly changed → insert a new row ──────────────────────────
-      if (financeRank !== lastStoredRank) {
-        await supabase
-          .from('coinbase_rank_history')
-          .insert({ finance_rank: financeRank });
-        
-        console.log(`[CoinbaseRank] Inserted new finance rank: ${financeRank} (previous: ${lastStoredRank})`);
+      if (insertResult.error) {
+        console.error('[CoinbaseRank] Failed to insert rank snapshot:', insertResult.error);
+        // Continue even if insert fails - we'll still try to fetch previous data
       } else {
-        console.log(`[CoinbaseRank] Finance rank unchanged at ${financeRank}, not inserting new record`);
+        console.log(`[CoinbaseRank] Inserted new rank snapshot at ${insertResult.data[0].captured_at}`);
       }
+
+      // Query the most recent previous record
+      const { data: prevData, error: prevError } = await supabase
+        .from('coinbase_app_rank_snapshots')
+        .select('finance_rank, overall_rank, captured_at')
+        .order('captured_at', { ascending: false })
+        .limit(2);  // Get current + previous (we'll use OFFSET 1 to get previous)
       
-      // ─── arrow direction helper ────────────────────────────────────────────────
-      direction = 
-        prevFinanceRank === null ? 'none' :
-        financeRank < prevFinanceRank ? 'up' :  // Lower rank number is better
-        financeRank > prevFinanceRank ? 'down' :
-        'none';
-      
-      console.log(`[CoinbaseRank] Direction: ${direction}, Current: ${financeRank}, Previous: ${prevFinanceRank}`);
+      if (prevError) {
+        console.error('[CoinbaseRank] Failed to fetch previous ranks:', prevError);
+      } else if (prevData && prevData.length > 1) {
+        // The second row is the previous record (OFFSET 1)
+        prevFinanceRank = prevData[1].finance_rank;
+        prevOverallRank = prevData[1].overall_rank;
+        
+        // Calculate deltas (positive number = improved rank, i.e., moved up the list)
+        if (financeRank !== null && prevFinanceRank !== null) {
+          deltaFinance = prevFinanceRank - financeRank;
+        }
+        
+        if (overallRank !== null && prevOverallRank !== null) {
+          deltaOverall = prevOverallRank - overallRank;
+        }
+        
+        console.log(`[CoinbaseRank] Previous ranks from ${prevData[1].captured_at}:`, 
+          `Finance: ${prevFinanceRank} (Δ${deltaFinance}), Overall: ${prevOverallRank} (Δ${deltaOverall})`);
+      } else {
+        console.log('[CoinbaseRank] No previous rank data found');
+      }
     } catch (dbError) {
       console.error('[CoinbaseRank] Database operation error:', dbError);
+      // Continue even if database operations fail - we'll return what we have
     }
   }
 
-  // For overall rank, keep existing logic (not implementing sticky previous yet)
-  if (supabase && overallRank !== null) {
-    try {
-      // Look up the previous overall rank
-      const { data: prevRows, error: selectError } = await supabase
-        .from('coinbase_app_rank')
-        .select('overall_rank')
-        .order('recorded_at', { ascending: false })
-        .limit(1);
-
-      if (!selectError && prevRows && prevRows.length > 0) {
-        prevOverallRank = prevRows[0].overall_rank;
-      }
-    } catch (dbError) {
-      console.error('[CoinbaseRank] Error fetching previous overall rank:', dbError);
-    }
-  }
-
-  // Build response
+  // Build response with all required fields
   const result = { 
     financeRank, 
     overallRank,
     prevFinanceRank,
     prevOverallRank,
-    direction,
-    source: dataSource,  // For debugging only
+    deltaFinance,
+    deltaOverall,
+    source: dataSource,
+    stale: false,
     ...(scraperReason ? { scraperReason } : {})  // Include reason if scraper was used
   };
   
-  // Cache without debug fields
+  // Cache the data (without debug fields)
   cachedData = { 
     financeRank, 
     overallRank,
     prevFinanceRank,
     prevOverallRank,
-    direction
+    deltaFinance,
+    deltaOverall,
+    stale: false
   };
   lastFetchTime = Date.now();
 
