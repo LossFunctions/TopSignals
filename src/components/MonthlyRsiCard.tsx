@@ -1,5 +1,5 @@
 // src/components/MonthlyRsiCard.tsx
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -28,15 +28,15 @@ export function MonthlyRsiCard() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>Monthly RSI</CardTitle>
           <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-48"></div>
+            <div className="h-8 bg-white/10 rounded w-32 mb-2"></div>
+            <div className="h-4 bg-white/10 rounded w-48"></div>
           </div>
         </CardContent>
       </Card>
@@ -45,7 +45,7 @@ export function MonthlyRsiCard() {
 
   if (error) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>Monthly RSI</CardTitle>
           <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
@@ -80,7 +80,7 @@ export function MonthlyRsiCard() {
   // Show temporary unavailable state if RSI specifically failed but other data loaded
   if (hasRsiError && data) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -89,24 +89,24 @@ export function MonthlyRsiCard() {
               </CardTitle>
               <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
             </div>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            <TrendingUp className="h-5 w-5 text-[#A1A1AA]" />
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-muted-foreground">--</span>
+              <span className="text-2xl font-bold text-[#A1A1AA]">--</span>
               <Badge variant="secondary">Temporarily Unavailable</Badge>
             </div>
             
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-white/5 p-3 rounded-lg">
+              <p className="text-sm text-[#A1A1AA]">
                 RSI data is temporarily unavailable. Please check back later.
               </p>
             </div>
             
             {lastUpdated && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-[#A1A1AA]">
                 Last attempt: {lastUpdated.toLocaleString()}
               </p>
             )}
@@ -118,24 +118,24 @@ export function MonthlyRsiCard() {
 
   // Normal case - RSI data is available
   return (
-    <Card className={isDanger ? 'border-red-500' : ''}>
+    <Card className={`h-full flex flex-col ${isDanger ? 'border-neon-red' : ''}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               Monthly RSI
-              {isDanger && <AlertCircle className="h-5 w-5 text-red-500" />}
+              {isDanger && <AlertCircle className="h-5 w-5 text-neon-red" />}
             </CardTitle>
             <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
           </div>
-          <TrendingUp className="h-5 w-5 text-muted-foreground" />
+          <TrendingUp className="h-5 w-5 text-[#A1A1AA]" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col">
         <div className="space-y-4">
           {/* RSI Value Display */}
           <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold">
+            <span className="text-2xl font-bold text-[#F5F5F7]">
               {rsiValue != null ? rsiValue.toFixed(2) : 'N/A'}
             </span>
             <Badge variant={status === 'Extreme' ? 'destructive' : status === 'Warning' ? 'outline' : 'secondary'}>
@@ -145,37 +145,27 @@ export function MonthlyRsiCard() {
 
           {/* Cycle-high row */}
           {cycleHigh && (
-            <div className="mt-2 flex items-center text-sm text-zinc-400">
+            <div className="flex items-center text-sm text-[#A1A1AA]">
               <span className="mr-1">Cycle high:</span> 
               <Badge>
                 {cycleHigh.value.toFixed(2)}
               </Badge> 
-              <span className="ml-1 text-zinc-500">
+              <span className="ml-1 text-[#71717A]">
                 ({format(parseISO(cycleHigh.date), 'MMM yyyy')})
               </span> 
               {cycleHighIsCurrentMonth && (
-                <Badge className="ml-2 bg-lime-500/10 text-lime-400">
+                <Badge className="ml-2 bg-neon-green/10 text-neon-green">
                   NEW
                 </Badge>
               )}
             </div>
           )}
 
-          {/* Danger Alert */}
-          {isDanger && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                RSI above 80 - Historical cycle top danger zone
-              </AlertDescription>
-            </Alert>
-          )}
-
           {/* Info Box */}
-          <div className="bg-muted p-3 rounded-lg">
+          <div className="bg-white/5 p-3 rounded-lg">
             <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+              <Info className="h-4 w-4 mt-0.5 text-[#A1A1AA]" />
+              <p className="text-sm text-[#A1A1AA]">
                 Monthly RSI ≥ 80 has historically occurred near Bitcoin market-cycle tops:&nbsp;
                 {historicalCycleHighs.length > 0 ? (
                   <>
@@ -198,7 +188,7 @@ export function MonthlyRsiCard() {
 
           {/* Mobile Summary (when accordion is hidden) */}
           {isMobile && historicalCycleHighs.length > 0 && (
-            <div className="text-sm text-muted-foreground mt-2">
+            <div className="text-sm text-[#A1A1AA] mt-2">
               Past-cycle RSI peaks: {historicalCycleHighs.map(peak => Math.round(peak.value)).join(', ')}
             </div>
           )}
@@ -214,11 +204,11 @@ export function MonthlyRsiCard() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-muted">
-                          <th className="text-left py-2 font-medium">Cycle</th>
-                          <th className="text-left py-2 font-medium">Peak RSI</th>
-                          <th className="text-left py-2 font-medium">Month</th>
-                          <th className="text-left py-2 font-medium">Days from Peak→Bottom</th>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-2 font-medium text-[#F5F5F7]">Cycle</th>
+                          <th className="text-left py-2 font-medium text-[#F5F5F7]">Peak RSI</th>
+                          <th className="text-left py-2 font-medium text-[#F5F5F7]">Month</th>
+                          <th className="text-left py-2 font-medium text-[#F5F5F7]">Days from Peak→Bottom</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -235,11 +225,11 @@ export function MonthlyRsiCard() {
                             differenceInDays(new Date(bottomDate), new Date(peak.date)) : null;
                           
                           return (
-                            <tr key={peak.cycle} className="border-b border-muted">
-                              <td className="py-2">{peak.cycle}</td>
-                              <td className="py-2">{peak.value.toFixed(1)}</td>
-                              <td className="py-2">{format(parseISO(peak.date), 'MMM-yyyy')}</td>
-                              <td className="py-2">{daysToBottom || '—'}</td>
+                            <tr key={peak.cycle} className="border-b border-white/10">
+                              <td className="py-2 text-[#A1A1AA]">{peak.cycle}</td>
+                              <td className="py-2 text-[#A1A1AA]">{peak.value.toFixed(1)}</td>
+                              <td className="py-2 text-[#A1A1AA]">{format(parseISO(peak.date), 'MMM-yyyy')}</td>
+                              <td className="py-2 text-[#A1A1AA]">{daysToBottom || '—'}</td>
                             </tr>
                           );
                         })}
@@ -251,9 +241,19 @@ export function MonthlyRsiCard() {
             </Accordion>
           )}
 
+          {/* Danger Alert - Moved inside the main space-y-4 div */}
+          {isDanger && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                RSI above 80 - Historical cycle top danger zone
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Last Updated */}
           {lastUpdated && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[#A1A1AA] mt-auto pt-2">
               Last updated: {lastUpdated.toLocaleString()}
             </p>
           )}
@@ -262,3 +262,5 @@ export function MonthlyRsiCard() {
     </Card>
   );
 }
+
+export default MonthlyRsiCard;

@@ -1,5 +1,6 @@
+// src/components/PiCycleCard.tsx
 import { usePiCycle } from '@/hooks/usePiCycle';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, TrendingUp, Activity } from 'lucide-react';
 
@@ -35,10 +36,10 @@ export function PiCycleCard() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
+            <Activity className="w-5 h-5 text-neon-cyan" />
             Pi-Cycle Top
           </CardTitle>
         </CardHeader>
@@ -51,15 +52,15 @@ export function PiCycleCard() {
 
   if (error) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
+            <Activity className="w-5 h-5 text-neon-cyan" />
             Pi-Cycle Top
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center text-red-600">
+          <div className="flex items-center text-neon-red">
             <AlertCircle className="mr-2 h-5 w-5" />
             <span>Failed to load: {error.message}</span>
           </div>
@@ -77,56 +78,60 @@ export function PiCycleCard() {
   
   // Determine status color and message
   const getStatusColor = () => {
-    if (crossed) return 'text-green-600';
-    if (distancePct > -10 && distancePct <= 0) return 'text-orange-600';
-    return 'text-gray-600';
+    if (crossed) return 'text-neon-green';
+    if (distancePct > -10 && distancePct <= 0) return 'text-neon-orange';
+    return 'text-[#A1A1AA]';
   };
 
   const getStatusMessage = () => {
     if (crossed) {
       return (
         <div className="flex items-center gap-2">
-          <span className="text-green-600">✅ Triggered</span>
-          <span className="text-sm text-gray-500">{timeAgo}</span>
+          <span className="px-3 py-1 bg-neon-green/10 text-neon-green rounded-full text-sm font-medium">
+            ✅ Triggered
+          </span>
+          <span className="text-sm text-[#A1A1AA]">{timeAgo}</span>
         </div>
       );
     }
     
     const percentageText = Math.abs(distancePct).toFixed(1);
     return (
-      <div className={getStatusColor()}>
-        Still {percentageText}% below trigger
+      <div className={`flex items-center gap-2 ${getStatusColor()}`}>
+        <span className={`px-3 py-1 ${distancePct > -10 ? 'bg-neon-orange/10' : 'bg-white/5'} rounded-full text-sm font-medium`}>
+          Still {percentageText}% below trigger
+        </span>
       </div>
     );
   };
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Activity className="w-5 h-5" />
+          <Activity className="w-5 h-5 text-neon-cyan" />
           Pi-Cycle Top
         </CardTitle>
         <CardDescription>Bitcoin Market Cycle Indicator</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="flex-1 flex flex-col justify-center space-y-4">
         <div className="text-lg font-semibold">
           {getStatusMessage()}
         </div>
         
-        <div className="space-y-1 text-sm text-muted-foreground">
+        <div className="space-y-2 text-sm text-[#A1A1AA]">
           <div className="flex justify-between">
             <span>111-day SMA:</span>
-            <span className="font-mono">{formatNumber(sma111)}</span>
+            <span className="font-mono text-[#F5F5F7]">{formatNumber(sma111)}</span>
           </div>
           <div className="flex justify-between">
             <span>350-day SMA × 2:</span>
-            <span className="font-mono">{formatNumber(sma350x2)}</span>
+            <span className="font-mono text-[#F5F5F7]">{formatNumber(sma350x2)}</span>
           </div>
         </div>
         
         {crossed && (
-          <div className="flex items-center gap-1 text-xs text-green-600">
+          <div className="flex items-center gap-1 text-xs text-neon-green mt-2">
             <TrendingUp className="w-4 h-4" />
             <span>Historically indicates market cycle top</span>
           </div>
@@ -135,3 +140,5 @@ export function PiCycleCard() {
     </Card>
   );
 }
+
+export default PiCycleCard;

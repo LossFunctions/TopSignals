@@ -1,4 +1,4 @@
-// ===== 1. src/components/FourYearCycleCard.tsx =====
+// src/components/FourYearCycleCard.tsx
 // Bitcoin 4-Year Cycle chart component showing historical cycles and projected top
 
 import React, { useMemo } from 'react';
@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from './ui/card';
+} from '@/components/ui/neon-glass-card';
 import {
   LineChart,
   Line,
@@ -47,10 +47,10 @@ const BottomDateLabel = ({ viewBox, date, label, isSmall }: any) => {
   const fontSize = isSmall ? 8 : 9;
   return (
     <g>
-      <text x={x} y={y - 17} fill="#d4d4d8" fontSize={fontSize} fontWeight={500} textAnchor="middle">
+      <text x={x} y={y - 17} fill="#A1A1AA" fontSize={fontSize} fontWeight={500} textAnchor="middle">
         {date}
       </text>
-      <text x={x} y={y - 5} fill="#d4d4d8" fontSize={fontSize} fontWeight={500} textAnchor="middle">
+      <text x={x} y={y - 5} fill="#A1A1AA" fontSize={fontSize} fontWeight={500} textAnchor="middle">
         {label}
       </text>
     </g>
@@ -171,17 +171,17 @@ export function FourYearCycleCard() {
       });
       
       return (
-        <div className="bg-zinc-900/95 p-3 rounded-lg border border-zinc-700 shadow-lg">
-          <p className="text-sm text-zinc-400">{dateStr}</p>
-          <p className="text-sm font-medium text-white">
+        <div className="bg-neon-bg1/95 p-3 rounded-lg border border-white/10 shadow-lg">
+          <p className="text-sm text-[#A1A1AA]">{dateStr}</p>
+          <p className="text-sm font-medium text-[#F5F5F7]">
             ${payload[0].value.toLocaleString(undefined, { 
               minimumFractionDigits: 0, 
               maximumFractionDigits: 0 
             })}
           </p>
           {(matchingMarker || matchingProjected) && (
-            <div className="mt-2 pt-2 border-t border-zinc-700">
-              <p className="text-sm font-semibold text-white">
+            <div className="mt-2 pt-2 border-t border-white/10">
+              <p className="text-sm font-semibold text-[#F5F5F7]">
                 {matchingMarker ? (matchingMarker.type === 'top' ? '▼' : '▲') : '▼'} {matchingMarker ? matchingMarker.label : matchingProjected?.label ?? '—'}
               </p>
             </div>
@@ -196,20 +196,20 @@ export function FourYearCycleCard() {
   const CustomLegend = () => (
     <div className="flex flex-wrap gap-4 text-xs">
       <span className="flex items-center gap-1.5">
-        <div className="w-3 h-0.5 bg-blue-500"></div>
-        <span className="text-zinc-400">BTC Price</span>
+        <div className="w-3 h-0.5 bg-neon-cyan"></div>
+        <span className="text-[#A1A1AA]">BTC Price</span>
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="text-green-500 font-semibold">▲</span>
-        <span className="text-zinc-400">Bottom</span>
+        <span className="text-neon-green font-semibold">▲</span>
+        <span className="text-[#A1A1AA]">Bottom</span>
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="text-red-500 font-semibold">▼</span>
-        <span className="text-zinc-400">Top</span>
+        <span className="text-neon-red font-semibold">▼</span>
+        <span className="text-[#A1A1AA]">Top</span>
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="text-red-500 font-semibold opacity-60 italic">▼</span>
-        <span className="text-zinc-400 italic">Projected Top</span>
+        <span className="text-neon-red font-semibold opacity-60 italic">▼</span>
+        <span className="text-[#A1A1AA] italic">Projected Top</span>
       </span>
     </div>
   );
@@ -277,10 +277,10 @@ export function FourYearCycleCard() {
 
   if (isLoading) {
     return (
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-white">4-Year Cycle</CardTitle>
-          <CardDescription className="text-zinc-400">Loading...</CardDescription>
+          <CardTitle className="text-xl font-semibold">4-Year Cycle</CardTitle>
+          <CardDescription>Loading...</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -288,10 +288,10 @@ export function FourYearCycleCard() {
 
   if (error || !btcData || chartData.length === 0) {
     return (
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-white">4-Year Cycle</CardTitle>
-          <CardDescription className="text-red-400">
+          <CardTitle className="text-xl font-semibold">4-Year Cycle</CardTitle>
+          <CardDescription className="text-neon-red">
             {error ? 'Error loading data' : 'No data available'}
           </CardDescription>
         </CardHeader>
@@ -300,15 +300,15 @@ export function FourYearCycleCard() {
   }
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <CardTitle className="text-xl font-semibold text-white">
+          <CardTitle className="text-xl font-semibold">
             4-Year Cycle
           </CardTitle>
           <CustomLegend />
         </div>
-        <CardDescription className="text-zinc-400">
+        <CardDescription>
           {getDataSourceDescription()}
         </CardDescription>
       </CardHeader>
@@ -330,8 +330,8 @@ export function FourYearCycleCard() {
               
               <CartesianGrid 
                 strokeDasharray="2 4" 
-                stroke="#3f3f46" 
-                strokeOpacity={0.3}
+                stroke="#71717A" 
+                strokeOpacity={0.2}
               />
               
               <XAxis
@@ -340,7 +340,7 @@ export function FourYearCycleCard() {
                 scale="time"
                 domain={[minTimestamp, maxTimestamp]}
                 tickFormatter={formatXAxisTick}
-                stroke="#71717a"
+                stroke="#71717A"
                 padding={{ left: 0, right: 0 }}
                 ticks={[
                   new Date('2014-01-01').getTime(),
@@ -359,13 +359,13 @@ export function FourYearCycleCard() {
                 domain={priceDomain}
                 allowDataOverflow
                 tickFormatter={formatYAxisTick}
-                stroke="#71717a"
+                stroke="#71717A"
                 ticks={[1, 10, 100, 1000, 10000, 100000, 150000]}
               />
               
               <Tooltip 
                 content={<CustomTooltip />} 
-                cursor={{ stroke: '#71717a', strokeWidth: 1, strokeDasharray: '3 3' }} 
+                cursor={{ stroke: '#71717A', strokeWidth: 1, strokeDasharray: '3 3' }} 
               />
               
               {/* Render cycle spans */}
@@ -373,7 +373,7 @@ export function FourYearCycleCard() {
                 const cycleLabel = !span.isBear && span.label && span.durationLabel ? {
                   value: span.label,
                   position: 'insideTop' as const,
-                  fill: '#22c55e',
+                  fill: '#10b981',
                   fontSize: 14,
                   fontWeight: 600,
                   style: { letterSpacing: '0.05em' }
@@ -416,7 +416,7 @@ export function FourYearCycleCard() {
                         value: labelValue,
                         position: 'insideTop' as const,
                         dy: isBearCycle ? s.labelYOffset + 329 : s.labelYOffset, // Adjust position for bear cycles
-                        fill: '#a1a1aa',
+                        fill: '#A1A1AA',
                         fontSize: isBearCycle ? 9.2 : (isMediumScreen ? 8 : 9), // Bigger font for bear cycles
                         style: { fontStyle: 'italic' }
                       }}

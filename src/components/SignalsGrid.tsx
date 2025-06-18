@@ -1,9 +1,9 @@
 // src/components/SignalsGrid.tsx
-import { FourYearCycleCard } from './FourYearCycleCard';
+import FourYearCycleCard from './FourYearCycleCard';
 import SignalCard from '@/components/SignalCard';
-import { PiCycleCard } from '@/components/PiCycleCard';
-import { MonthlyRsiCard } from '@/components/MonthlyRsiCard';
-import { WeeklyEmaCard } from '@/components/WeeklyEmaCard';
+import PiCycleCard from '@/components/PiCycleCard';
+import MonthlyRsiCard from '@/components/MonthlyRsiCard';
+import WeeklyEmaCard from '@/components/WeeklyEmaCard';
 import { useSignals } from '@/hooks/useSignals';
 import { AlertTriangle } from 'lucide-react';
 
@@ -32,32 +32,55 @@ export function SignalsGrid() {
   
   // Define custom indicator components to include
   const customIndicators = [
-    { id: 'pi-cycle', component: <PiCycleCard /> },
-    { id: 'monthly-rsi', component: <MonthlyRsiCard /> },
-    { id: 'weekly-ema', component: <WeeklyEmaCard /> },
+    { id: 'pi-cycle', component: <PiCycleCard />, row: 1 },
+    { id: 'monthly-rsi', component: <MonthlyRsiCard />, row: 2 },
+    { id: 'weekly-ema', component: <WeeklyEmaCard />, row: 2 },
     { id: 'four-year-cycle', component: <FourYearCycleCard />, span: 'full' },
-    // Add more custom indicators here in the future:
-    // { id: 'fear-greed', component: <FearGreedCard /> },
   ];
 
   return (
-    <div 
-      id="signals-grid" 
-      className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
-    >
-      {/* Database-driven signals */}
-      {signals
-        .filter(signal => databaseSignalsToShow.includes(signal.name))
-        .map((signal) => (
-          <SignalCard key={signal.id} signalName={signal.name} />
-        ))}
+    <div className="space-y-6 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* First row - Equal height cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ gridAutoRows: '1fr' }}>
+        {/* Database-driven signals */}
+        {signals
+          .filter(signal => databaseSignalsToShow.includes(signal.name))
+          .map((signal) => (
+            <SignalCard key={signal.id} signalName={signal.name} />
+          ))}
+        
+        {/* Pi-Cycle card */}
+        {customIndicators
+          .filter(({ row }) => row === 1)
+          .map(({ id, component }) => (
+            <div key={id}>
+              {component}
+            </div>
+          ))}
+      </div>
       
-      {/* Custom indicator components */}
-      {customIndicators.map(({ id, component, span = 1 }) => (
-        <div key={id} className={span === 'full' ? 'col-span-full' : (span === 2 ? 'sm:col-span-2' : '')}>
-          {component}
-        </div>
-      ))}
+      {/* Second row - Equal height cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ gridAutoRows: '1fr' }}>
+        {customIndicators
+          .filter(({ row }) => row === 2)
+          .map(({ id, component }) => (
+            <div key={id}>
+              {component}
+            </div>
+          ))}
+      </div>
+      
+      {/* Full width cards */}
+      {customIndicators
+        .filter(({ span }) => span === 'full')
+        .map(({ id, component }) => (
+          <div key={id}>
+            {component}
+          </div>
+        ))}
     </div>
   );
 }
+
+// Add default export as well
+export default SignalsGrid;
