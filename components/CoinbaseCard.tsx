@@ -1,6 +1,5 @@
 // components/CoinbaseCard.tsx
 
-import React from 'react';
 import useSWR from 'swr';
 import { coinbaseRankFetcher, RankData } from '@/lib/fetchers';
 import { Card, CardContent } from '@/components/ui/neon-glass-card';

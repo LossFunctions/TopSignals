@@ -1,15 +1,15 @@
-import React from 'react';
+import { ReactNode, FC } from 'react';
 
 type CardHeaderProps = {
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  right?: React.ReactNode;
-  icon?: React.ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  right?: ReactNode;
+  icon?: ReactNode;
   align?: 'left' | 'center' | 'right';
   className?: string;
 };
 
-const CardHeader: React.FC<CardHeaderProps> = ({ 
+const CardHeader: FC<CardHeaderProps> = ({ 
   title, 
   subtitle, 
   right,

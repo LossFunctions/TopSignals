@@ -1,6 +1,5 @@
 // src/components/SignalCard.tsx
 
-import React from 'react';
 import useSWR from 'swr';
 import { coinbaseRankFetcher } from '@/lib/fetchers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';

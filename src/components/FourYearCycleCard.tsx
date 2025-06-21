@@ -1,7 +1,7 @@
 // src/components/FourYearCycleCard.tsx
 // Bitcoin 4-Year Cycle chart component showing historical cycles and projected top
 
-import React, { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -77,10 +77,10 @@ export function FourYearCycleCard() {
   const cycleMarkers = useMemo(() => getCycleMarkers(), []);
 
   // Check if we're on a small/medium screen
-  const [isSmallScreen, setIsSmallScreen] = React.useState(false);
-  const [isMediumScreen, setIsMediumScreen] = React.useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isMediumScreen, setIsMediumScreen] = useState(false);
   
-  React.useEffect(() => {
+  useEffect(() => {
     const checkScreenSize = () => {
       setIsSmallScreen(window.innerWidth < 640);
       setIsMediumScreen(window.innerWidth < 768);
