@@ -6,6 +6,7 @@ import { coinbaseRankFetcher } from '@/lib/fetchers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, ArrowUp, ArrowDown, TrendingUp, TrendingDown } from 'lucide-react';
+import CardHeaderComponent from '@/components/ui/card-header';
 
 // Extended RankData interface with all necessary fields
 export interface RankData {
@@ -23,7 +24,7 @@ interface SignalCardProps {
   signalName: string;
 }
 
-const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
+const SignalCard = ({ signalName }: SignalCardProps) => {
   const { data, error, isLoading } = useSWR<RankData>(
     '/api/coinbaseRank',
     coinbaseRankFetcher,
@@ -145,5 +146,8 @@ const SignalCard: React.FC<SignalCardProps> = ({ signalName }) => {
     </Card>
   );
 };
+
+// Attach CardHeader as a static property
+SignalCard.Header = CardHeaderComponent;
 
 export default SignalCard;

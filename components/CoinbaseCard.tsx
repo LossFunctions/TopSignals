@@ -3,9 +3,10 @@
 import React from 'react';
 import useSWR from 'swr';
 import { coinbaseRankFetcher, RankData } from '@/lib/fetchers';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
+import { Card, CardContent } from '@/components/ui/neon-glass-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import SignalCard from '@/components/SignalCard';
 
 export function CoinbaseCard() {
   const { data, error, isLoading } = useSWR<RankData>(
@@ -17,9 +18,10 @@ export function CoinbaseCard() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Coinbase App Rank</CardTitle>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Coinbase App Rank"
+          align="center"
+        />
         <CardContent>
           <Skeleton className="h-12 w-24" />
         </CardContent>
@@ -30,9 +32,10 @@ export function CoinbaseCard() {
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Coinbase App Rank</CardTitle>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Coinbase App Rank"
+          align="center"
+        />
         <CardContent>
           <div className="flex items-center text-neon-red">
             <AlertCircle className="mr-2 h-5 w-5" />
@@ -64,10 +67,11 @@ export function CoinbaseCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Coinbase App Rank</CardTitle>
-        <CardDescription>App Store Rankings</CardDescription>
-      </CardHeader>
+      <SignalCard.Header 
+        title="Coinbase App Rank"
+        subtitle="App Store Rankings"
+        align="center"
+      />
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center text-center">
           <div className="text-sm text-[#A1A1AA]">Finance Category</div>

@@ -1,12 +1,13 @@
 // src/components/MonthlyRsiCard.tsx
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
+import { Card, CardContent } from '@/components/ui/neon-glass-card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { AlertCircle, TrendingUp, Info } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 import { useBTCIndicators } from '@/hooks/useBTCIndicators';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
+import SignalCard from '@/components/SignalCard';
 
 export function MonthlyRsiCard() {
   const { data, error, isLoading } = useBTCIndicators();
@@ -29,10 +30,11 @@ export function MonthlyRsiCard() {
   if (isLoading) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Monthly RSI</CardTitle>
-          <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Monthly RSI"
+          subtitle="Bitcoin 14-period RSI on monthly candles"
+          align="center"
+        />
         <CardContent>
           <div className="animate-pulse">
             <div className="h-8 bg-white/10 rounded w-32 mb-2"></div>
@@ -46,10 +48,11 @@ export function MonthlyRsiCard() {
   if (error) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Monthly RSI</CardTitle>
-          <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Monthly RSI"
+          subtitle="Bitcoin 14-period RSI on monthly candles"
+          align="center"
+        />
         <CardContent>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -81,17 +84,11 @@ export function MonthlyRsiCard() {
   if (hasRsiError && data) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                Monthly RSI
-              </CardTitle>
-              <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
-            </div>
-            <TrendingUp className="h-5 w-5 text-[#A1A1AA]" />
-          </div>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Monthly RSI"
+          subtitle="Bitcoin 14-period RSI on monthly candles"
+          align="center"
+        />
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -119,18 +116,16 @@ export function MonthlyRsiCard() {
   // Normal case - RSI data is available
   return (
     <Card className={`h-full flex flex-col ${isDanger ? 'border-neon-red' : ''}`}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              Monthly RSI
-              {isDanger && <AlertCircle className="h-5 w-5 text-neon-red" />}
-            </CardTitle>
-            <CardDescription>Bitcoin 14-period RSI on monthly candles</CardDescription>
+      <SignalCard.Header 
+        title={
+          <div className="flex items-center gap-2">
+            Monthly RSI
+            {isDanger && <AlertCircle className="h-5 w-5 text-neon-red" />}
           </div>
-          <TrendingUp className="h-5 w-5 text-[#A1A1AA]" />
-        </div>
-      </CardHeader>
+        }
+        subtitle="Bitcoin 14-period RSI on monthly candles"
+        align="center"
+      />
       <CardContent className="flex-1 flex flex-col">
         <div className="space-y-4">
           {/* RSI Value Display */}

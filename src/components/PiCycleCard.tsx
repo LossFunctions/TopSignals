@@ -1,8 +1,9 @@
 // src/components/PiCycleCard.tsx
 import { usePiCycle } from '@/hooks/usePiCycle';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
+import { Card, CardContent } from '@/components/ui/neon-glass-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, TrendingUp, Activity } from 'lucide-react';
+import { AlertCircle, TrendingUp } from 'lucide-react';
+import SignalCard from '@/components/SignalCard';
 
 // Helper function to format time ago
 function getTimeAgo(isoString: string): string {
@@ -37,12 +38,10 @@ export function PiCycleCard() {
   if (isLoading) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-neon-cyan" />
-            Pi-Cycle Top
-          </CardTitle>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Pi-Cycle Top"
+          align="center"
+        />
         <CardContent>
           <Skeleton className="h-12 w-full" />
         </CardContent>
@@ -53,12 +52,10 @@ export function PiCycleCard() {
   if (error) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-neon-cyan" />
-            Pi-Cycle Top
-          </CardTitle>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Pi-Cycle Top"
+          align="center"
+        />
         <CardContent>
           <div className="flex items-center text-neon-red">
             <AlertCircle className="mr-2 h-5 w-5" />
@@ -107,13 +104,11 @@ export function PiCycleCard() {
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-neon-cyan" />
-          Pi-Cycle Top
-        </CardTitle>
-        <CardDescription>Bitcoin Market Cycle Indicator</CardDescription>
-      </CardHeader>
+      <SignalCard.Header 
+        title="Pi-Cycle Top"
+        subtitle="Bitcoin Market Cycle Indicator"
+        align="center"
+      />
       <CardContent className="flex-1 flex flex-col justify-center space-y-4">
         <div className="text-lg font-semibold">
           {getStatusMessage()}

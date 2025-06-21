@@ -5,10 +5,8 @@ import React, { useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/neon-glass-card';
+import SignalCard from '@/components/SignalCard';
 import {
   LineChart,
   Line,
@@ -278,10 +276,11 @@ export function FourYearCycleCard() {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">4-Year Cycle</CardTitle>
-          <CardDescription>Loading...</CardDescription>
-        </CardHeader>
+        <SignalCard.Header 
+          title="4-Year Cycle"
+          subtitle="Loading..."
+          align="center"
+        />
       </Card>
     );
   }
@@ -289,29 +288,27 @@ export function FourYearCycleCard() {
   if (error || !btcData || chartData.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">4-Year Cycle</CardTitle>
-          <CardDescription className="text-neon-red">
-            {error ? 'Error loading data' : 'No data available'}
-          </CardDescription>
-        </CardHeader>
+        <SignalCard.Header 
+          title="4-Year Cycle"
+          subtitle={
+            <span className="text-neon-red">
+              {error ? 'Error loading data' : 'No data available'}
+            </span>
+          }
+          align="center"
+        />
       </Card>
     );
   }
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <CardTitle className="text-xl font-semibold">
-            4-Year Cycle
-          </CardTitle>
-          <CustomLegend />
-        </div>
-        <CardDescription>
-          {getDataSourceDescription()}
-        </CardDescription>
-      </CardHeader>
+      <SignalCard.Header 
+        title="4-Year Cycle"
+        subtitle={getDataSourceDescription()}
+        right={<CustomLegend />}
+        align="center"
+      />
       <CardContent>
         <div className="h-[320px] sm:h-[480px] overflow-visible">
           <ResponsiveContainer width="100%" height="100%">

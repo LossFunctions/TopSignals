@@ -1,9 +1,10 @@
 // src/components/WeeklyEmaCard.tsx
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/neon-glass-card';
+import { Card, CardContent } from '@/components/ui/neon-glass-card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Activity, Info } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 import { useBTCIndicators } from '@/hooks/useBTCIndicators';
+import SignalCard from '@/components/SignalCard';
 
 export function WeeklyEmaCard() {
   const { data, error, isLoading } = useBTCIndicators();
@@ -11,10 +12,11 @@ export function WeeklyEmaCard() {
   if (isLoading) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Weekly EMA Breaks</CardTitle>
-          <CardDescription>BTC vs 50 & 200 week exponential moving averages</CardDescription>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Weekly EMA Breaks"
+          subtitle="BTC vs 50 & 200 week exponential moving averages"
+          align="center"
+        />
         <CardContent>
           <div className="animate-pulse">
             <div className="h-8 bg-white/10 rounded w-full mb-2"></div>
@@ -29,10 +31,11 @@ export function WeeklyEmaCard() {
   if (error) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Weekly EMA Breaks</CardTitle>
-          <CardDescription>BTC vs 50 & 200 week exponential moving averages</CardDescription>
-        </CardHeader>
+        <SignalCard.Header 
+          title="Weekly EMA Breaks"
+          subtitle="BTC vs 50 & 200 week exponential moving averages"
+          align="center"
+        />
         <CardContent>
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -56,18 +59,16 @@ export function WeeklyEmaCard() {
 
   return (
     <Card className={`h-full flex flex-col ${hasBreak ? 'border-neon-orange' : ''}`}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              Weekly EMA Breaks
-              {hasBreak && <AlertTriangle className="h-5 w-5 text-neon-orange" />}
-            </CardTitle>
-            <CardDescription>BTC vs 50 & 200 week exponential moving averages</CardDescription>
+      <SignalCard.Header 
+        title={
+          <div className="flex items-center gap-2">
+            Weekly EMA Breaks
+            {hasBreak && <AlertTriangle className="h-5 w-5 text-neon-orange" />}
           </div>
-          <Activity className="h-5 w-5 text-[#A1A1AA]" />
-        </div>
-      </CardHeader>
+        }
+        subtitle="BTC vs 50 & 200 week exponential moving averages"
+        align="center"
+      />
       <CardContent className="flex-1 flex flex-col">
         <div className="space-y-4">
           {/* Current Price */}
