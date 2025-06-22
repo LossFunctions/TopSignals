@@ -31,19 +31,59 @@ export interface CoinbaseRankPayload {
   prevOverallRank: number | null;
 }
 
-// Main fetcher for SWR
+// Main fetcher for SWR with improved error handling
 export const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    const error = new Error('An error occurred while fetching the data.');
-    // Attach extra info to the error object
-    (error as any).info = await response.json();
-    (error as any).status = response.status;
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      let errorInfo;
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      try {
+        // Try to parse error response as JSON
+        errorInfo = await response.json();
+        if (errorInfo.message) {
+          errorMessage = errorInfo.message;
+        }
+      } catch (parseError) {
+        // If JSON parsing fails, try to get text content
+        try {
+          const textContent = await response.text();
+          if (textContent) {
+            errorMessage = textContent;
+          }
+        } catch (textError) {
+          // If both JSON and text parsing fail, use the default message
+          errorMessage = `Failed to fetch data: ${response.status} ${response.statusText}`;
+        }
+      }
+      
+      const error = new Error(errorMessage);
+      (error as any).info = errorInfo;
+      (error as any).status = response.status;
+      throw error;
+    }
+    
+    // Try to parse successful response as JSON
+    try {
+      return await response.json();
+    } catch (parseError) {
+      // If JSON parsing fails on a successful response, check if it's empty
+      const textContent = await response.text();
+      if (!textContent.trim()) {
+        throw new Error('Server returned empty response');
+      }
+      throw new Error('Server returned invalid JSON response');
+    }
+  } catch (error) {
+    // Handle network errors (like ECONNREFUSED)
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to server. Please ensure the API server is running.');
+    }
+    // Re-throw other errors as-is
     throw error;
   }
-  
-  return response.json();
 };
 
 // Specialized fetchers (all use the same logic for now)
@@ -61,16 +101,50 @@ export const fetcherWithAuth = async (url: string, token?: string) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  const response = await fetch(url, { headers });
-  
-  if (!response.ok) {
-    const error = new Error('An error occurred while fetching the data.');
-    (error as any).info = await response.json();
-    (error as any).status = response.status;
+  try {
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      let errorInfo;
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      try {
+        errorInfo = await response.json();
+        if (errorInfo.message) {
+          errorMessage = errorInfo.message;
+        }
+      } catch (parseError) {
+        try {
+          const textContent = await response.text();
+          if (textContent) {
+            errorMessage = textContent;
+          }
+        } catch (textError) {
+          errorMessage = `Failed to fetch data: ${response.status} ${response.statusText}`;
+        }
+      }
+      
+      const error = new Error(errorMessage);
+      (error as any).info = errorInfo;
+      (error as any).status = response.status;
+      throw error;
+    }
+    
+    try {
+      return await response.json();
+    } catch (parseError) {
+      const textContent = await response.text();
+      if (!textContent.trim()) {
+        throw new Error('Server returned empty response');
+      }
+      throw new Error('Server returned invalid JSON response');
+    }
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to server. Please ensure the API server is running.');
+    }
     throw error;
   }
-  
-  return response.json();
 };
 
 // Default export as well for flexibility
