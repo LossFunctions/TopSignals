@@ -2,7 +2,8 @@
 import { usePiCycle } from '@/hooks/usePiCycle';
 import { Card, CardContent } from '@/components/ui/neon-glass-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, TrendingUp } from 'lucide-react';
+import { AlertCircle, TrendingUp, Info } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import SignalCard from '@/components/SignalCard';
 
 // Helper function to format time ago
@@ -131,6 +132,69 @@ export function PiCycleCard() {
             <span>Historically indicates market cycle top</span>
           </div>
         )}
+
+        {/* Info Box */}
+        <div className="bg-white/5 p-3 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 mt-0.5 text-[#A1A1AA]" />
+            <p className="text-sm text-[#A1A1AA]">
+              The Pi-Cycle Top fires when the 111-day MA crosses above the
+              350-day MA × 2. It has called the 2013, 2017 and 2021 peaks
+              within days.
+            </p>
+          </div>
+        </div>
+
+        {/* Historical signals */}
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="history">
+            <AccordionTrigger className="text-sm font-medium">
+              Past Cycle Signals
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-2 font-medium text-[#F5F5F7]">
+                        Cycle
+                      </th>
+                      <th className="text-left py-2 font-medium text-[#F5F5F7]">
+                        Signal Price
+                      </th>
+                      <th className="text-left py-2 font-medium text-[#F5F5F7]">
+                        Peak Price (Days)
+                      </th>
+                      <th className="text-left py-2 font-medium text-[#F5F5F7]">
+                        Drop After
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-white/10">
+                      <td className="py-2 text-[#A1A1AA]">2013</td>
+                      <td className="py-2 text-[#A1A1AA]">$142</td>
+                      <td className="py-2 text-[#A1A1AA]">$230 (4d)</td>
+                      <td className="py-2 text-[#A1A1AA]">-65%</td>
+                    </tr>
+                    <tr className="border-b border-white/10">
+                      <td className="py-2 text-[#A1A1AA]">2017</td>
+                      <td className="py-2 text-[#A1A1AA]">$16,341</td>
+                      <td className="py-2 text-[#A1A1AA]">$19,927 (3d)</td>
+                      <td className="py-2 text-[#A1A1AA]">-84%</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-[#A1A1AA]">2021</td>
+                      <td className="py-2 text-[#A1A1AA]">$58,931</td>
+                      <td className="py-2 text-[#A1A1AA]">$64,816 (11d)</td>
+                      <td className="py-2 text-[#A1A1AA]">-53%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
   );
