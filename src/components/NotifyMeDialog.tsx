@@ -67,6 +67,13 @@ export function NotifyMeDialog() {
     },
   });
 
+  const toggleAll = (checked: boolean) => {
+    const signalKeys = Object.keys(SIGNAL_CONFIG) as SignalKey[];
+    signalKeys.forEach(key => {
+      form.setValue(`signals.${key}`, checked);
+    });
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     
@@ -104,7 +111,7 @@ export function NotifyMeDialog() {
           Notify Me
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-[#0a0a0a] border-gray-800">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-gray-800">
         <DialogHeader>
           <DialogTitle className="text-2xl text-white flex items-center gap-2">
             <Bell className="h-6 w-6 text-yellow-500" />
@@ -141,7 +148,31 @@ export function NotifyMeDialog() {
             />
 
             <div className="space-y-4">
-              <div className="text-sm font-medium text-white">Select Signals to Monitor</div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-white">Select Signals to Monitor</div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleAll(true)}
+                    disabled={isSubmitting}
+                    className="text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  >
+                    All On
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleAll(false)}
+                    disabled={isSubmitting}
+                    className="text-xs bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+                  >
+                    All Off
+                  </Button>
+                </div>
+              </div>
               
               {Object.entries(SIGNAL_CONFIG).map(([key, config]) => (
                 <FormField
