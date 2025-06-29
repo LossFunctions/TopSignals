@@ -127,13 +127,13 @@ export function NotifyMeDialog() {
                     <Input
                       {...field}
                       type="tel"
-                      placeholder="1-347-429-2996"
+                      placeholder="1-347-400-1111"
                       className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
                       disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormDescription className="text-gray-500">
-                    We'll send you SMS alerts when signals trigger
+                    We'll send you alerts so you make sure to sell at the right time!
                   </FormDescription>
                   <FormMessage className="text-red-400" />
                 </FormItem>
