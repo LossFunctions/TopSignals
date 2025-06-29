@@ -3,10 +3,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { SignalsGrid } from '@/components/SignalsGrid';
 import { Footer } from '@/components/Footer';
-<<<<<<< HEAD
 import { Toaster } from '@/components/ui/toaster-simple';
-=======
->>>>>>> e75ae0c2b77f8f5eb82ca9efd52d0e3ffc5d5406
 import './App.css';
 
 function App() {
@@ -35,10 +32,7 @@ function App() {
       </div>
       
       <Footer />
-<<<<<<< HEAD
       <Toaster />
-=======
->>>>>>> e75ae0c2b77f8f5eb82ca9efd52d0e3ffc5d5406
     </div>
   );
 }
