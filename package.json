@@ -61,7 +61,10 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "technicalindicators": "^3.1.0",
+<<<<<<< HEAD
     "twilio": "^5.7.1",
+=======
+>>>>>>> e75ae0c2b77f8f5eb82ca9efd52d0e3ffc5d5406
     "vaul": "^1.0.0",
     "zod": "^3.25.28"
   },
@@ -83,7 +86,11 @@
     "tailwindcss": "^3.4.13",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.7.0",
+<<<<<<< HEAD
     "vercel": "^44.2.7",
+=======
+    "vercel": "^42.3.0",
+>>>>>>> e75ae0c2b77f8f5eb82ca9efd52d0e3ffc5d5406
     "vite": "^5.4.8"
   }
 }
