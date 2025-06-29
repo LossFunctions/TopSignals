@@ -37,11 +37,11 @@ const formSchema = z.object({
       message: 'Invalid phone number format',
     }),
   signals: z.object({
-    pi_cycle: z.boolean(),
-    four_year: z.boolean(),
     coinbase_rank: z.boolean(),
+    pi_cycle: z.boolean(),
     monthly_rsi: z.boolean(),
     weekly_ema: z.boolean(),
+    four_year: z.boolean(),
   }).refine((signals) => Object.values(signals).some(Boolean), {
     message: 'Please select at least one signal alert',
   }),
@@ -58,11 +58,11 @@ export function NotifyMeDialog() {
     defaultValues: {
       phone: '',
       signals: {
-        pi_cycle: false,
-        four_year: false,
         coinbase_rank: false,
+        pi_cycle: false,
         monthly_rsi: false,
         weekly_ema: false,
+        four_year: false,
       },
     },
   });
@@ -140,7 +140,7 @@ export function NotifyMeDialog() {
                     />
                   </FormControl>
                   <FormDescription className="text-gray-500">
-                    We'll send you alerts so you make sure to sell at the right time!
+                    We'll send you alerts when a signal is triggered!
                   </FormDescription>
                   <FormMessage className="text-red-400" />
                 </FormItem>
