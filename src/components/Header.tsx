@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-<<<<<<< HEAD
 import { NotifyMeDialog } from '@/components/NotifyMeDialog';
-=======
->>>>>>> e75ae0c2b77f8f5eb82ca9efd52d0e3ffc5d5406
 
 export function Header() {
   const [showModal, setShowModal] = useState(false);
@@ -17,7 +14,6 @@ export function Header() {
         <h1 className="text-xl font-semibold text-white">Top Signals</h1>
       </div>
       
-<<<<<<< HEAD
       <div className="flex items-center gap-2">
         <NotifyMeDialog />
         <Button 
@@ -28,15 +24,6 @@ export function Header() {
           Unlock All Signals
         </Button>
       </div>
-=======
-      <Button 
-        onClick={() => setShowModal(true)}
-        className="bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-200"
-        aria-label="Unlock All Signals"
-      >
-        Unlock All Signals
-      </Button>
->>>>>>> e75ae0c2b77f8f5eb82ca9efd52d0e3ffc5d5406
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md bg-gray-900 border border-gray-800 text-white">
