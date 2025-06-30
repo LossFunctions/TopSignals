@@ -1,4 +1,4 @@
-import { twilioClient, TWILIO_FROM } from '../lib/twilioClient';
+import { twilioClient, TWILIO_FROM } from '../lib/twilioClient.js';
 
 export async function sendAlert(to: string, body: string) {
   return twilioClient.messages.create({
