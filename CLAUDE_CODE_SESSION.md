@@ -243,7 +243,7 @@ Deploy and schedule the backend check function to run at defined intervals, ensu
   "crons": [
     {
       "path": "/api/check-signals",
-      "schedule": "0 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
