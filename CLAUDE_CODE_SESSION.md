@@ -218,4 +218,145 @@ Successfully tested live SMS functionality with forced signal trigger:
 - ⏳ **Scheduling**: Step 6 - automated signal monitoring
 
 ---
-*This session completed both the foundational SMS infrastructure (Step 4) and the complete signal-checking logic (Step 5), including live SMS testing and production deployment. The TopSignals notification system is now production-ready and will begin sending real SMS alerts immediately once the 10DLC campaign is approved.*
+
+## Session Update: 2025-07-02 (Step 6 Completed)
+
+### Additional Implementation: Automated Signal Checking with Vercel Cron Jobs
+
+#### Objective
+Deploy and schedule the backend check function to run at defined intervals, ensuring users get alerts in a timely manner whenever signal conditions are met without manual intervention.
+
+#### Implementation Completed
+
+**1. Vercel Cron Configuration**
+- **File**: `vercel.json` (created)
+- **Schedule**: `0 * * * *` (runs every hour at the top of each hour)
+- **Endpoint**: `/api/check-signals`
+- **Features**:
+  - Serverless cron job using Vercel's native scheduling
+  - No external services required
+  - Automatic scaling and reliability
+
+**2. Cron Configuration Structure**
+```json
+{
+  "crons": [
+    {
+      "path": "/api/check-signals",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
+```
+
+**3. Comprehensive Documentation**
+- **File**: `CRON_DEPLOYMENT.md` (created)
+- **Contents**:
+  - Deployment step-by-step instructions
+  - Environment variable requirements
+  - Testing procedures (dry-run and live)
+  - Monitoring and troubleshooting guide
+  - Cost considerations and optimization tips
+
+#### Technical Implementation Details
+
+**Cron Schedule Explanation:**
+- `0 * * * *` = "At minute 0 of every hour"
+- Alternative schedules documented for different use cases:
+  - Every 6 hours: `0 */6 * * *`
+  - Daily at 9 AM UTC: `0 9 * * *`
+  - Every 15 minutes (testing): `*/15 * * * *`
+
+**Integration with Existing System:**
+- Leverages existing `/api/check-signals` endpoint
+- No code changes required to existing signal detection logic
+- Maintains all safety features (dry-run mode, state tracking)
+- Compatible with Twilio sandbox/live switching
+
+#### Deployment Architecture
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ Vercel Cron     │    │ /api/check-      │    │ Signal Detection│
+│ Scheduler       ├───▶│ signals          ├───▶│ & SMS Sending   │
+│ (0 * * * *)     │    │                  │    │                 │
+│ • Hourly trigger│    │ • All 5 signals  │    │ • Pi-Cycle      │
+│ • Automatic     │    │ • Subscriber     │    │ • 4-Year Cycle  │
+│ • Serverless    │    │   querying       │    │ • Coinbase Rank │
+└─────────────────┘    │ • SMS delivery   │    │ • Monthly RSI   │
+                       │ • State tracking │    │ • Weekly EMA    │
+                       └──────────────────┘    └─────────────────┘
+```
+
+#### Production Readiness Checklist
+
+**Configuration Verification:**
+- ✅ **JSON Syntax**: Validated using Python json.tool
+- ✅ **Cron Schedule**: Standard cron syntax verified
+- ✅ **File Location**: `vercel.json` in project root
+- ✅ **Endpoint Match**: Points to existing `/api/check-signals`
+
+**Deployment Requirements:**
+- ✅ **Environment Variables**: All Twilio/Supabase vars documented
+- ✅ **Safety Mode**: Defaults to dry-run (`SEND_SMS=false`)
+- ✅ **Error Handling**: Comprehensive error tracking in place
+- ✅ **State Management**: Duplicate alert prevention maintained
+
+#### Testing Strategy
+
+**Phase 1 - Dry Run Deployment:**
+1. Deploy with `SEND_SMS=false`
+2. Monitor Vercel function logs for hourly executions
+3. Verify signal checking logic works correctly
+4. Confirm no actual SMS sends occur
+
+**Phase 2 - Live Mode Switch:**
+1. Set `SEND_SMS=true` in Vercel environment variables
+2. Monitor first few live executions closely
+3. Verify SMS delivery through Twilio dashboard
+4. Track subscriber notifications and any errors
+
+#### Monitoring & Maintenance
+
+**Vercel Dashboard Monitoring:**
+- Functions → Cron Jobs → `/api/check-signals`
+- Function logs for execution history
+- Error tracking and performance metrics
+
+**Key Metrics to Watch:**
+- Execution frequency (should be exactly hourly)
+- Function duration and memory usage
+- SMS delivery success rates
+- Error frequencies and types
+
+#### Files Created/Modified
+- `vercel.json` - New file (cron configuration)
+- `CRON_DEPLOYMENT.md` - New file (deployment documentation)
+
+#### Cost Optimization
+- **Vercel**: Hourly function invocations (720/month)
+- **Twilio**: SMS only sent when signals trigger (rare events)
+- **Estimated Cost**: <$5/month for small subscriber base
+- **Monitoring**: Built-in logging prevents unexpected costs
+
+#### Current Status
+- **Cron Configuration**: ✅ Complete and validated
+- **Documentation**: ✅ Comprehensive deployment guide created
+- **Testing**: ⏳ Ready for deployment and testing
+- **Production**: ⏳ Awaiting user deployment to Vercel
+
+#### Next Steps for User
+1. **Deploy**: Push changes to trigger Vercel deployment
+2. **Verify**: Check Vercel dashboard for cron job registration
+3. **Test**: Monitor first few executions in dry-run mode
+4. **Go Live**: Set `SEND_SMS=true` when ready for production alerts
+
+#### Integration Completion
+The TopSignals automated notification system is now fully implemented:
+- ✅ **Step 4**: Twilio SMS integration with sandbox testing
+- ✅ **Step 5**: Complete signal-check logic with live SMS testing
+- ✅ **Step 6**: Automated scheduling with Vercel cron jobs
+
+The system will now automatically monitor all market signals every hour and send timely SMS alerts to subscribed users without any manual intervention required.
+
+---
+*This session completed the final automation component (Step 6) of the TopSignals notification system. The platform now features fully automated, hourly signal monitoring with SMS alerts, requiring only deployment to become a production-ready service.*
