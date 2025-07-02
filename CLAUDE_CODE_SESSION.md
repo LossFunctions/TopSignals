@@ -230,7 +230,7 @@ Deploy and schedule the backend check function to run at defined intervals, ensu
 
 **1. Vercel Cron Configuration**
 - **File**: `vercel.json` (created)
-- **Schedule**: `0 * * * *` (runs every hour at the top of each hour)
+- **Schedule**: `0 3 * * *` (runs once a day)
 - **Endpoint**: `/api/check-signals`
 - **Features**:
   - Serverless cron job using Vercel's native scheduling

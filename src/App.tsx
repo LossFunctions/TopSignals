@@ -5,6 +5,7 @@ import { SignalsGrid } from '@/components/SignalsGrid';
 import { Footer } from '@/components/Footer';
 import { Toaster } from '@/components/ui/toaster-simple';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './App.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
       <Footer />
       <Toaster />
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }

@@ -40,6 +40,7 @@
     "@radix-ui/react-tooltip": "^1.1.2",
     "@supabase/supabase-js": "^2.39.7",
     "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "app-store-scraper": "^0.18.0",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
