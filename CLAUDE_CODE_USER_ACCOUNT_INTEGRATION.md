@@ -187,29 +187,114 @@ npx vercel dev
 - ✅ User registration (email/password)
 - ✅ User login/logout
 - ✅ Session persistence across page refreshes
-- ✅ Basic content gating (premium button visibility)
 - ✅ Error handling and user feedback
 - ✅ TypeScript compilation without errors
 
 ---
 
-## Step 4: Stripe Payment Integration ✅
+## Step 4: Integrate Auth State into UI (Header & Basic Gating Hooks) ✅
 
-### API Routes Created:
+### UI Integration Completed:
+- ✅ Header updates with conditional Sign In/Log Out buttons
+- ✅ User email display for authenticated users
+- ✅ Basic content gating (premium button visibility based on user status)
+- ✅ AuthProvider wrapping entire application
+- ✅ Premium status detection (`is_premium` and `is_admin` flags)
 
-1. **Checkout Session API** (`api/create-checkout-session.js`):
-   - Validates user authentication and premium status
-   - Creates Stripe checkout session with user linking
-   - Handles errors and customer creation
-   - Uses `client_reference_id` to link Stripe sessions to Supabase users
+### User Experience Flow:
+- **Visitors**: See "Sign In" button and "Unlock All Signals" button
+- **Logged-in Free Users**: See their email, "Log Out" button, and "Unlock All Signals" button  
+- **Premium/Admin Users**: See their email and "Log Out" button (no upgrade prompt)
 
-2. **Webhook Handler** (`api/stripe-webhook.js`):
-   - Verifies Stripe webhook signatures for security
-   - Handles `checkout.session.completed` events
-   - Updates user metadata to mark as premium
-   - Optional transaction logging for billing history
+---
 
-3. **Environment Configuration**:
+## Step 5: Stripe One-Time Product & Webhook Setup ✅
+
+### Manual Stripe Dashboard Configuration:
+
+1. **Stripe Product Created**:
+   - **Product Name**: "TopSignals Premium"
+   - **Type**: One-time payment (lifetime access)
+   - **Price ID**: `price_1RhcYHP1CkUi3094P7GjpUv6`
+   - **Configuration**: Non-recurring, single purchase for permanent premium access
+
+2. **Webhook Endpoint Configured**:
+   - **URL**: `https://topsignals.vercel.app/api/stripe-webhook`
+   - **Events**: `checkout.session.completed`
+   - **Signing Secret**: `whsec_************************` (configured in Vercel)
+   - **Purpose**: Automatic user premium status activation on payment success
+
+3. **Environment Variables Set in Vercel**:
+   ```env
+   STRIPE_SECRET_KEY=sk_test_************************  ✅
+   STRIPE_WEBHOOK_SECRET=whsec_************************  ✅
+   STRIPE_PRICE_ID=price_1RhcYHP1CkUi3094P7GjpUv6  ⚠️ (needs to be added)
+   ```
+
+4. **Local Testing Setup**:
+   ```bash
+   # Stripe CLI for local webhook testing
+   stripe login
+   stripe listen --events checkout.session.completed \
+     --forward-to http://localhost:3000/api/stripe-webhook
+   ```
+
+5. **Redirect URLs Configured**:
+   - **Success URL**: `https://topsignals.vercel.app/?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+   - **Cancel URL**: `https://topsignals.vercel.app/?checkout=cancel`
+
+### Infrastructure Status:
+- ✅ Stripe product and pricing configured
+- ✅ Webhook endpoint registered and verified
+- ✅ Test mode keys configured in Vercel
+- ⚠️ Missing `STRIPE_PRICE_ID` in Vercel environment
+- ✅ Local testing tools available via Stripe CLI
+
+### Next Phase Preparation:
+- **Test Mode**: Ready for testing with `4242 4242 4242 4242`
+- **Live Mode**: Requires creating live product, webhook, and updating keys
+- **Monitoring**: Stripe Dashboard provides event logs and payment tracking
+
+---
+
+## Step 6: Implement Stripe Checkout Session Creation (Backend API) ✅
+
+### Checkout Session API Created (`api/create-checkout-session.js`):
+- **User Validation**: Verifies user authentication and existing premium status
+- **Session Creation**: Creates Stripe checkout session with proper metadata
+- **User Linking**: Uses `client_reference_id` to link Stripe sessions to Supabase users
+- **Error Handling**: Comprehensive error handling for Stripe API failures
+- **Security**: Validates requests and prevents duplicate upgrades
+
+### Frontend Integration:
+- **Header Component**: Added checkout flow handling in upgrade modal
+- **Loading States**: Shows processing spinner during checkout creation
+- **Error Handling**: Toast notifications for failures
+- **Redirect Flow**: Automatic redirection to Stripe Checkout
+
+---
+
+## Step 7: Stripe Webhook Handler (Upgrade User to Premium) ✅
+
+### Webhook Handler API Created (`api/stripe-webhook.js`):
+- **Signature Verification**: Verifies Stripe webhook signatures for security
+- **Event Processing**: Handles `checkout.session.completed` events
+- **User Upgrade**: Updates user metadata to mark as premium automatically
+- **Transaction Logging**: Optional transaction recording for billing history
+- **Error Recovery**: Handles webhook failures and retry logic
+
+### Premium Activation Process:
+1. Stripe sends webhook on successful payment
+2. Webhook verifies signature and extracts user info
+3. User metadata updated: `is_premium: true`
+4. Additional payment details stored (customer ID, amount, etc.)
+
+### Success/Cancel Handling:
+- **App.tsx Updates**: URL parameter detection for checkout results
+- **Success Flow**: Welcome toast and URL cleanup
+- **Cancel Flow**: Cancellation message and retry option
+
+### Environment Configuration:
    ```env
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_PRICE_ID=price_1RhcYHP1CkUi3094P7GjpUv6
@@ -231,26 +316,41 @@ npx vercel dev
    - Cancel handling for abandoned checkouts
    - Clean URL after processing
 
-### Payment Flow:
+### Complete Payment Flow (Steps 6-7 Combined):
 1. User clicks "Unlock All Signals" → Opens upgrade modal
-2. User clicks "Proceed to Checkout" → Calls `/api/create-checkout-session`
+2. User clicks "Proceed to Checkout" → Calls `/api/create-checkout-session` 
 3. API creates Stripe session → Redirects to Stripe Checkout
 4. User completes payment → Stripe sends webhook to `/api/stripe-webhook`
 5. Webhook updates user metadata → User marked as premium
 6. User redirected back → Success message displayed
 
-### Features Completed:
+### Features Completed (Steps 6-7):
 - ✅ One-time payment processing with Stripe
-- ✅ Secure webhook verification
+- ✅ Secure webhook verification and signature validation
 - ✅ User account linking between Stripe and Supabase
-- ✅ Automatic premium status activation
-- ✅ Success/error handling in UI
+- ✅ Automatic premium status activation on payment
+- ✅ Success/error handling in UI with toast notifications
 - ✅ TypeScript compilation without errors
 
-### Next Steps: Testing & Content Gating
-1. Add `STRIPE_PRICE_ID` to Vercel environment variables
-2. Test complete payment flow with test cards
-3. Implement enhanced content gating based on premium status
+---
+
+## Step 8: Premium Content Gating – Backend Enforcement (Next)
+
+### Planned Implementation:
+1. **Enhanced Signal Gating**: Implement premium-only signals in SignalsGrid component
+2. **Database Content Filtering**: Utilize existing RLS policies to restrict premium signals  
+3. **UI Premium Indicators**: Add lock icons and premium badges to locked content
+4. **API Protection**: Ensure backend APIs respect premium status for data access
+
+### Immediate Next Steps:
+1. **Environment Setup**: Add `STRIPE_PRICE_ID=price_1RhcYHP1CkUi3094P7GjpUv6` to Vercel
+2. **Testing**: Test complete payment flow with Stripe test cards (`4242 4242 4242 4242`)
+3. **Content Gating**: Implement frontend/backend premium content restrictions
+
+### Current Status:
+- ✅ Steps 1-7 completed (Authentication + Payment Integration)
+- ⚠️ Missing `STRIPE_PRICE_ID` environment variable in Vercel  
+- 🔄 Ready for Step 8: Premium Content Gating implementation
 
 ---
 
