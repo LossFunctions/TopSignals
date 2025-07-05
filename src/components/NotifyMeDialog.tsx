@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { SIGNAL_CONFIG, type SignalKey } from '@/types/subscription';
 import { formatPhoneNumber } from '@/lib/subscriptionUtils';
+import { useAuth } from '@/context/AuthContext';
 
 // Form validation schema
 const formSchema = z.object({
@@ -52,6 +53,10 @@ type FormData = z.infer<typeof formSchema>;
 export function NotifyMeDialog() {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user, session } = useAuth();
+  
+  // Check if user is premium
+  const isPremium = user?.user_metadata?.is_premium || user?.user_metadata?.is_admin;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -75,6 +80,22 @@ export function NotifyMeDialog() {
   };
 
   const onSubmit = async (data: FormData) => {
+    // Check authentication and premium status
+    if (!user) {
+      toast.error('Please sign in to subscribe to alerts.');
+      return;
+    }
+    
+    if (!isPremium) {
+      toast.error('Premium membership required for SMS alerts. Please upgrade your account.');
+      return;
+    }
+
+    if (!session?.access_token) {
+      toast.error('Authentication error. Please sign in again.');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -82,6 +103,7 @@ export function NotifyMeDialog() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(data),
       });
@@ -102,6 +124,11 @@ export function NotifyMeDialog() {
       setIsSubmitting(false);
     }
   };
+
+  // Don't render the button if user is not premium
+  if (!user || !isPremium) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -1,13 +1,8 @@
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '../lib/supabaseServer.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-// Initialize Supabase client for server-side operations
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Initialize Stripe with error handling
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -25,6 +20,18 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check if Stripe is configured
+    if (!stripe) {
+      console.error('[Checkout] Stripe not configured - missing STRIPE_SECRET_KEY');
+      return res.status(500).json({ error: 'Payment system not configured' });
+    }
+
+    // Check if Stripe Price ID is configured
+    if (!process.env.STRIPE_PRICE_ID) {
+      console.error('[Checkout] Stripe Price ID not configured');
+      return res.status(500).json({ error: 'Payment configuration incomplete' });
+    }
+
     const { userEmail, userId } = req.body;
 
     // Validate required fields
@@ -32,6 +39,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ 
         error: 'Missing required fields: userEmail and userId' 
       });
+    }
+
+    // Initialize Supabase client
+    const supabase = createServerSupabaseClient();
+    if (!supabase) {
+      console.error('[Checkout] Failed to initialize Supabase client');
+      return res.status(500).json({ error: 'Database connection failed' });
     }
 
     // Verify the user exists in Supabase
@@ -52,6 +66,14 @@ export default async function handler(req, res) {
 
     // Get base URL for redirects
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://topsignals.vercel.app';
+    
+    console.log('[Checkout] Creating session for user:', {
+      userId,
+      userEmail,
+      baseUrl,
+      stripeConfigured: !!stripe,
+      priceId: process.env.STRIPE_PRICE_ID
+    });
     
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({

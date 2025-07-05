@@ -65,7 +65,7 @@ export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -81,6 +81,47 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check for authentication token
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Authentication required. Please log in to subscribe to alerts.' 
+      });
+    }
+
+    // Initialize Supabase client for auth verification
+    const supabase = createServerSupabaseClient();
+    if (!supabase) {
+      console.error('[Subscribe] Failed to initialize Supabase client');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Database connection failed' 
+      });
+    }
+
+    // Verify user authentication and get user data
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('[Subscribe] Auth verification failed:', authError);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Invalid authentication token. Please log in again.' 
+      });
+    }
+
+    // Check if user has premium access
+    const isPremium = user.user_metadata?.is_premium || user.user_metadata?.is_admin;
+    if (!isPremium) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Premium membership required for SMS alerts. Please upgrade your account to access this feature.' 
+      });
+    }
+
     // Validate request payload
     const validation = validateSubscriptionRequest(req.body);
     if (!validation.isValid) {
@@ -91,19 +132,10 @@ export default async function handler(req, res) {
         errors: validation.errors 
       });
     }
-    
-    // Initialize Supabase client with service role
-    const supabase = createServerSupabaseClient();
-    if (!supabase) {
-      console.error('[Subscribe] Failed to initialize Supabase client');
-      return res.status(500).json({ 
-        success: false,
-        error: 'Database connection failed' 
-      });
-    }
 
-    // Prepare data for insert/upsert
+    // Prepare data for insert/upsert (include user_id to link subscription to user)
     const subscriptionData = {
+      user_id: user.id,
       phone_number: validation.phone,
       pi_cycle: validation.signals.pi_cycle || false,
       four_year: validation.signals.four_year || false,
@@ -113,11 +145,11 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString()
     };
 
-    // Insert or update subscription using upsert
+    // Insert or update subscription using upsert (one subscription per user)
     const { data, error } = await supabase
       .from('subscriptions')
       .upsert(subscriptionData, {
-        onConflict: 'phone_number'
+        onConflict: 'user_id'
       })
       .select()
       .single();
@@ -143,6 +175,8 @@ export default async function handler(req, res) {
     // Log successful subscription
     console.log('[Subscribe] Subscription saved successfully:', {
       id: data.id,
+      user_id: user.id,
+      user_email: user.email,
       phone: validation.phone,
       signals: Object.entries(validation.signals)
         .filter(([_, enabled]) => enabled)
