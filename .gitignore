@@ -50,3 +50,4 @@ ehthumbs.db
 # *.tsbuildinfo # Often these are in the build dir (dist) anyway
 .vercel
 .env*.local
+.env.development
