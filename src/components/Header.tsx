@@ -3,9 +3,16 @@ import { Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { NotifyMeDialog } from '@/components/NotifyMeDialog';
+import { AuthDialog } from '@/components/AuthDialog';
+import { useAuth } from '@/context/AuthContext';
 
 export function Header() {
   const [showModal, setShowModal] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const { user, signOut } = useAuth();
+  
+  // Check if user is premium or admin
+  const isPremium = user?.user_metadata?.is_premium || user?.user_metadata?.is_admin || false;
 
   return (
     <header className="w-full py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -16,13 +23,41 @@ export function Header() {
       
       <div className="flex items-center gap-2">
         <NotifyMeDialog />
-        <Button 
-          onClick={() => setShowModal(true)}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-200"
-          aria-label="Unlock All Signals"
-        >
-          Unlock All Signals
-        </Button>
+        {!isPremium && (
+          <Button 
+            onClick={() => {
+              if (!user) {
+                setShowAuthDialog(true);
+              } else {
+                setShowModal(true);
+              }
+            }}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white transition-all duration-200"
+            aria-label="Unlock All Signals"
+          >
+            Unlock All Signals
+          </Button>
+        )}
+        {user ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400 hidden sm:inline">{user.email}</span>
+            <Button 
+              onClick={signOut}
+              variant="ghost"
+              className="text-gray-400 hover:text-white"
+            >
+              Log Out
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            onClick={() => setShowAuthDialog(true)}
+            variant="outline"
+            className="text-white border-gray-600 hover:bg-gray-800 hover:text-white bg-transparent"
+          >
+            Sign In
+          </Button>
+        )}
       </div>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
@@ -54,6 +89,11 @@ export function Header() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <AuthDialog 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog}
+      />
     </header>
   );
 }
