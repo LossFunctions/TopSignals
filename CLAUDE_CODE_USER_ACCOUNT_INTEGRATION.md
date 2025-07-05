@@ -215,7 +215,7 @@ npx vercel dev
 1. **Stripe Product Created**:
    - **Product Name**: "TopSignals Premium"
    - **Type**: One-time payment (lifetime access)
-   - **Price ID**: `price_1RhcYHP1CkUi3094P7GjpUv6`
+   - **Price ID**: `price_*********************` (configured in Stripe)
    - **Configuration**: Non-recurring, single purchase for permanent premium access
 
 2. **Webhook Endpoint Configured**:
@@ -228,7 +228,7 @@ npx vercel dev
    ```env
    STRIPE_SECRET_KEY=sk_test_************************  ✅
    STRIPE_WEBHOOK_SECRET=whsec_************************  ✅
-   STRIPE_PRICE_ID=price_1RhcYHP1CkUi3094P7GjpUv6  ⚠️ (needs to be added)
+   STRIPE_PRICE_ID=price_*********************  ✅
    ```
 
 4. **Local Testing Setup**:
@@ -247,7 +247,7 @@ npx vercel dev
 - ✅ Stripe product and pricing configured
 - ✅ Webhook endpoint registered and verified
 - ✅ Test mode keys configured in Vercel
-- ⚠️ Missing `STRIPE_PRICE_ID` in Vercel environment
+- ✅ All Stripe environment variables configured in Vercel
 - ✅ Local testing tools available via Stripe CLI
 
 ### Next Phase Preparation:
@@ -297,7 +297,7 @@ npx vercel dev
 ### Environment Configuration:
    ```env
    STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_PRICE_ID=price_1RhcYHP1CkUi3094P7GjpUv6
+   STRIPE_PRICE_ID=price_*********************
    STRIPE_WEBHOOK_SECRET=whsec_...
    NEXT_PUBLIC_BASE_URL=https://topsignals.vercel.app
    ```
