@@ -191,10 +191,66 @@ npx vercel dev
 - ✅ Error handling and user feedback
 - ✅ TypeScript compilation without errors
 
-### Next Steps: Step 4 - Payment Integration
-1. **api/create-checkout-session.js** - Stripe checkout creation
-2. **api/stripe-webhook.js** - Payment confirmation handler
-3. Enhanced content gating based on user premium status
+---
+
+## Step 4: Stripe Payment Integration ✅
+
+### API Routes Created:
+
+1. **Checkout Session API** (`api/create-checkout-session.js`):
+   - Validates user authentication and premium status
+   - Creates Stripe checkout session with user linking
+   - Handles errors and customer creation
+   - Uses `client_reference_id` to link Stripe sessions to Supabase users
+
+2. **Webhook Handler** (`api/stripe-webhook.js`):
+   - Verifies Stripe webhook signatures for security
+   - Handles `checkout.session.completed` events
+   - Updates user metadata to mark as premium
+   - Optional transaction logging for billing history
+
+3. **Environment Configuration**:
+   ```env
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_PRICE_ID=price_1RhcYHP1CkUi3094P7GjpUv6
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   NEXT_PUBLIC_BASE_URL=https://topsignals.vercel.app
+   ```
+
+### Frontend Integration:
+
+1. **Header Component Updates**:
+   - Added checkout flow handling in upgrade modal
+   - Loading states during checkout process
+   - Error handling with toast notifications
+   - Automatic redirection to Stripe Checkout
+
+2. **Success/Cancel Handling** (`App.tsx`):
+   - URL parameter detection for checkout results
+   - Success toast for completed payments
+   - Cancel handling for abandoned checkouts
+   - Clean URL after processing
+
+### Payment Flow:
+1. User clicks "Unlock All Signals" → Opens upgrade modal
+2. User clicks "Proceed to Checkout" → Calls `/api/create-checkout-session`
+3. API creates Stripe session → Redirects to Stripe Checkout
+4. User completes payment → Stripe sends webhook to `/api/stripe-webhook`
+5. Webhook updates user metadata → User marked as premium
+6. User redirected back → Success message displayed
+
+### Features Completed:
+- ✅ One-time payment processing with Stripe
+- ✅ Secure webhook verification
+- ✅ User account linking between Stripe and Supabase
+- ✅ Automatic premium status activation
+- ✅ Success/error handling in UI
+- ✅ TypeScript compilation without errors
+
+### Next Steps: Testing & Content Gating
+1. Add `STRIPE_PRICE_ID` to Vercel environment variables
+2. Test complete payment flow with test cards
+3. Implement enhanced content gating based on premium status
 
 ---
 

@@ -1,18 +1,60 @@
 import { useState } from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { NotifyMeDialog } from '@/components/NotifyMeDialog';
 import { AuthDialog } from '@/components/AuthDialog';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export function Header() {
   const [showModal, setShowModal] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
   const { user, signOut } = useAuth();
   
   // Check if user is premium or admin
   const isPremium = user?.user_metadata?.is_premium || user?.user_metadata?.is_admin || false;
+
+  const handleCheckout = async () => {
+    if (!user) {
+      toast.error('Please sign in to upgrade to premium');
+      setShowModal(false);
+      setShowAuthDialog(true);
+      return;
+    }
+
+    setIsProcessingCheckout(true);
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail: user.email,
+          userId: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+
+    } catch (error) {
+      console.error('Checkout error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout process';
+      toast.error(errorMessage);
+    } finally {
+      setIsProcessingCheckout(false);
+    }
+  };
 
   return (
     <header className="w-full py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
@@ -83,8 +125,20 @@ export function Header() {
             <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
               Cancel
             </Button>
-            <Button type="button" className="bg-emerald-500 hover:bg-emerald-600">
-              Proceed to Checkout
+            <Button 
+              type="button" 
+              onClick={handleCheckout}
+              disabled={isProcessingCheckout}
+              className="bg-emerald-500 hover:bg-emerald-600"
+            >
+              {isProcessingCheckout ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Proceed to Checkout'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
